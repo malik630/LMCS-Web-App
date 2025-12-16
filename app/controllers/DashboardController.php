@@ -53,8 +53,6 @@ class DashboardController extends Controller
             'nom' => $_POST['nom'] ?? '',
             'prenom' => $_POST['prenom'] ?? '',
             'email' => $_POST['email'] ?? '',
-            'grade' => $_POST['grade'] ?? '',
-            'poste' => $_POST['poste'] ?? '',
             'domaine_recherche' => $_POST['domaine_recherche'] ?? '',
             'biographie' => $_POST['biographie'] ?? ''
         ];

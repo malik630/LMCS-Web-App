@@ -1,98 +1,127 @@
 <?php
 
-class Event
+class Event extends Model
 {
-    private $db;
-    
-    public function __construct()
+    public function getAll()
     {
-        $this->db = new Database();
+        return $this->selectAll('evenements', [], 'date_debut', 'DESC');
+    }
+    
+    public function getById($id)
+    {
+        return $this->selectById('evenements', $id, 'id_evenement');
     }
     
     public function getUpcoming()
     {
-        $this->db->connect();
-        $query = "SELECT e.*, te.libelle as type_libelle,
-                         u.nom as organisateur_nom, u.prenom as organisateur_prenom
-                  FROM evenements e
-                  LEFT JOIN types_evenements te ON e.type_evenement_id = te.id_type
-                  LEFT JOIN users u ON e.organisateur_id = u.id_user
-                  WHERE e.statut = 'a_venir'
-                  ORDER BY e.date_debut ASC";
-        $result = $this->db->query($query);
-        $this->db->disconnect();
-        return $result;
+        return $this->selectAll('evenements', ['statut' => 'a_venir'], 'date_debut', 'ASC');
     }
     
     public function getExterne($limit = null)
     {
-        $this->db->connect();
-        $query = "SELECT e.*, te.libelle as type_libelle,
-                         u.nom as organisateur_nom, u.prenom as organisateur_prenom
-                  FROM evenements e
-                  LEFT JOIN types_evenements te ON e.type_evenement_id = te.id_type
-                  LEFT JOIN users u ON e.organisateur_id = u.id_user
-                  WHERE e.externe = 1 AND e.statut != 'annule'
-                  ORDER BY e.date_debut DESC";
+        $query = "SELECT * FROM evenements
+                  WHERE externe = 1 AND statut != 'annule'
+                  ORDER BY date_debut DESC";
         
         if ($limit) {
-            $limit = (int)$limit;
-            $query .= " LIMIT $limit";
+            $query .= " LIMIT " . (int)$limit;
         }
         
-        $result = $this->db->query($query);
-        $this->db->disconnect();
-        return $result;
+        return $this->select($query);
     }
     
-    public function getAll($filters = [])
+    public function getByType($typeId)
     {
-        $this->db->connect();
-        
-        $where = "WHERE 1=1";
-        $params = [];
-        
-        if (!empty($filters['type'])) {
-            $where .= " AND e.type_evenement_id = :type";
-            $params['type'] = $filters['type'];
-        }
-        
-        if (!empty($filters['statut'])) {
-            $where .= " AND e.statut = :statut";
-            $params['statut'] = $filters['statut'];
-        }
-        
-        if (!empty($filters['search'])) {
-            $where .= " AND (e.titre LIKE :search OR e.description LIKE :search)";
-            $params['search'] = "%{$filters['search']}%";
-        }
-        
-        $sortBy = $filters['sortBy'] ?? 'date_debut';
-        $sortOrder = strtoupper($filters['sortOrder'] ?? 'DESC');
-        $allowedSort = ['date_debut', 'titre', 'type_evenement_id'];
-        $sortBy = in_array($sortBy, $allowedSort) ? $sortBy : 'date_debut';
-        $sortOrder = $sortOrder === 'ASC' ? 'ASC' : 'DESC';
-        
-        $query = "SELECT e.*, te.libelle as type_libelle,
-                         u.nom as organisateur_nom, u.prenom as organisateur_prenom
-                  FROM evenements e
-                  LEFT JOIN types_evenements te ON e.type_evenement_id = te.id_type
-                  LEFT JOIN users u ON e.organisateur_id = u.id_user
-                  $where
-                  ORDER BY e.$sortBy $sortOrder";
-        
-        $result = $this->db->query($query, $params);
-        $this->db->disconnect();
-        return $result;
+        return $this->selectAll('evenements', [
+            'type_evenement_id' => $typeId
+        ], 'date_debut', 'DESC');
     }
     
-    public function getTypes()
+    public function getByStatut($statut)
     {
-        $this->db->connect();
-        $query = "SELECT * FROM types_evenements ORDER BY libelle ASC";
-        $result = $this->db->query($query);
-        $this->db->disconnect();
-        return $result;
+        return $this->selectAll('evenements', ['statut' => $statut], 'date_debut', 'DESC');
+    }
+    
+    public function getByOrganisateur($organisateurId)
+    {
+        return $this->selectAll('evenements', [
+            'organisateur_id' => $organisateurId
+        ], 'date_debut', 'DESC');
+    }
+
+    public function searchByTitle($search)
+    {
+        return $this->search('evenements', 'titre', $search);
+    }
+    
+    public function updateStatut($id, $statut)
+    {
+        $validStatuts = ['a_venir', 'en_cours', 'termine', 'annule'];
+        if (!in_array($statut, $validStatuts)) {
+            return false;
+        }
+        return $this->updateById('evenements', $id, ['statut' => $statut], 'id_evenement');
+    }
+
+    public function countUpcoming()
+    {
+        return $this->count('evenements', ['statut' => 'a_venir']);
+    }
+    
+    public function countByType($typeId)
+    {
+        return $this->count('evenements', ['type_evenement_id' => $typeId]);
+    }
+    
+    public function eventExists($id)
+    {
+        return $this->exists('evenements', $id, 'id_evenement');
+    }
+ 
+    public function getInscriptions($eventId)
+    {
+        $query = "SELECT ie.*, u.nom, u.prenom, u.email as user_email
+                  FROM inscriptions_evenements ie
+                  LEFT JOIN users u ON ie.usr_id = u.id_user
+                  WHERE ie.evenement_id = :event_id
+                  ORDER BY ie.date_inscription DESC";
+        return $this->select($query, ['event_id' => $eventId]);
+    }
+
+    public function countInscriptions($eventId)
+    {
+        $query = "SELECT COUNT(*) as total FROM inscriptions_evenements 
+                  WHERE evenement_id = :event_id AND statut != 'annulee'";
+        $result = $this->select($query, ['event_id' => $eventId]);
+        return (int)($result[0]['total'] ?? 0);
+    }
+    
+    public function inscrire($eventId, $userId = null, $nom = null, $email = null)
+    {
+        return $this->insert('inscriptions_evenements', [
+            'evenement_id' => $eventId,
+            'usr_id' => $userId,
+            'nom' => $nom,
+            'email' => $email
+        ]);
+    }
+    
+    public function isInscrit($eventId, $userId = null, $email = null)
+    {
+        if ($userId) {
+            $query = "SELECT COUNT(*) as total FROM inscriptions_evenements 
+                      WHERE evenement_id = :event_id AND usr_id = :user_id 
+                      AND statut != 'annulee'";
+            $params = ['event_id' => $eventId, 'user_id' => $userId];
+        } else {
+            $query = "SELECT COUNT(*) as total FROM inscriptions_evenements 
+                      WHERE evenement_id = :event_id AND email = :email 
+                      AND statut != 'annulee'";
+            $params = ['event_id' => $eventId, 'email' => $email];
+        }
+        
+        $result = $this->select($query, $params);
+        return (int)$result[0]['total'] > 0;
     }
 }
 ?>

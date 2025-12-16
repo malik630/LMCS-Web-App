@@ -102,9 +102,32 @@ class HeaderView extends View
     {
         if (isset($_SESSION['user_id'])) {
             ?>
-    <span class="text-sm">Bonjour, <?php echo $this->escape($_SESSION['nom_complet']); ?></span>
-    <a href="<?php echo BASE_URL; ?>auth/logout"
-        class="bg-red-600 px-4 py-1 rounded hover:bg-red-700 transition text-sm">Déconnexion</a>
+    <div class="flex items-center space-x-4">
+        <a href="<?php echo BASE_URL; ?>dashboard" class="flex items-center space-x-2 hover:opacity-80 transition">
+            <?php 
+            $user = [
+                'photo' => $_SESSION['photo'] ?? null,
+                'prenom' => $_SESSION['prenom'] ?? '',
+                'nom' => $_SESSION['nom'] ?? ''
+            ];
+            ?>
+            <div class="flex items-center space-x-2">
+                <?php if (!empty($user['photo'])): ?>
+                <img src="<?php echo ASSETS_URL . 'images/users/' . $user['photo']; ?>" alt="Photo de profil"
+                    class="w-10 h-10 rounded-full object-cover border-2 border-blue-300"
+                    onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23667eea%22/%3E%3C/svg%3E'">
+                <?php else: ?>
+                <div
+                    class="w-10 h-10 rounded-full bg-blue-300 flex items-center justify-center text-blue-900 text-sm font-bold border-2 border-blue-400">
+                    <?php echo strtoupper(substr($user['prenom'], 0, 1) . substr($user['nom'], 0, 1)); ?>
+                </div>
+                <?php endif; ?>
+                <span class="text-sm font-medium">Mon espace</span>
+            </div>
+        </a>
+        <a href="<?php echo BASE_URL; ?>auth/logout"
+            class="bg-red-600 px-4 py-1 rounded hover:bg-red-700 transition text-sm">Déconnexion</a>
+    </div>
     <?php
         } else {
             ?>
@@ -146,7 +169,7 @@ class HeaderView extends View
             '' => 'Accueil',
             'project' => 'Projets',
             'publication' => 'Publications',
-            'equipment' => 'Équipements',
+            'equipement' => 'Équipements',
             'team' => 'Membres',
             'event' => 'Événements',
             'offer' => 'Opportunités',

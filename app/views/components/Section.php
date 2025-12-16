@@ -26,5 +26,15 @@ class Section extends View
 </section>
 <?php
     }
+    
+    public static function create($title, $content, $bgClass = 'bg-white')
+    {
+        $section = new self([
+            'title' => $title,
+            'content' => $content,
+            'bg_class' => $bgClass
+        ]);
+        $section->render();
+    }
 }
 ?>

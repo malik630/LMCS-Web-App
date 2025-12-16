@@ -32,7 +32,10 @@ class FooterView extends View
     <p class="mb-2"><strong>Adresse:</strong> LMCS, Ecole nationale Supérieure d’Informatique, BP M68, Oued Smar, Alger
         16309</p>
     <p class="mb-2"><strong>Téléphone/Fax:</strong> 00 213 (0) 23-93-91-30</p>
-    <p class="mb-2"><strong>Email:</strong> lmcs@esi.dz</p>
+    <strong>Email :</strong>
+    <a href="mailto:lmcs@esi.dz" class="text-blue-600 hover:underline">
+        lmcs@esi.dz
+    </a>
 </div>
 <?php
     }
@@ -83,8 +86,10 @@ class FooterView extends View
     private function renderScripts()
     {
         ?>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="<?php echo ASSETS_URL; ?>js/slider.js"></script>
 <script src="<?php echo ASSETS_URL; ?>js/pagination.js"></script>
+<script src="<?php echo ASSETS_URL; ?>js/Search-Sort.js"></script>
 <?php
     }
     

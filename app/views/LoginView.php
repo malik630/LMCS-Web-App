@@ -17,7 +17,7 @@ class LoginView extends View
 <div class="container mx-auto px-4 py-12">
     <div class="max-w-md mx-auto">
         <div class="bg-white rounded-lg shadow-xl overflow-hidden">
-            <div class="bg-gradient-to-r from-purple-600 to-purple-800 p-6 text-center">
+            <div class="bg-black p-6 text-center">
                 <h2 class="text-3xl font-bold text-white mb-2">Connexion</h2>
                 <p class="text-blue-100">Accédez à votre espace personnel</p>
             </div>
@@ -39,7 +39,7 @@ class LoginView extends View
                         placeholder="Entrez votre mot de passe">
                 </div>
                 <button type="submit"
-                    class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition transform hover:scale-[1.02] active:scale-[0.98]">
+                    class="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-black-700 transition transform hover:scale-[1.02] active:scale-[0.98]">
                     Se connecter
                 </button>
             </form>
@@ -57,8 +57,6 @@ class LoginView extends View
     </div>
 </div>
 <?php
-$hash = password_hash("user", PASSWORD_DEFAULT);
-echo $hash;
     }
 }
 ?>

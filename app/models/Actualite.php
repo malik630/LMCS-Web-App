@@ -1,51 +1,47 @@
 <?php
 
-class Actualite
+class Actualite extends Model
 {
-    private $db;
-    
-    public function __construct()
-    {
-        $this->db = new Database();
-    }
-    
     public function getAllForSlider()
     {
-        $this->db->connect();
         $query = "SELECT a.*, t.libelle as type_libelle 
                   FROM actualites a 
                   LEFT JOIN types_actualites t ON a.type_actualite_id = t.id_type
                   WHERE a.afficher_diaporama = 1 
                   ORDER BY a.ordre_diaporama ASC, a.date_publication DESC";
-        $result = $this->db->query($query);
-        $this->db->disconnect();
-        return $result;
+        return $this->select($query);
     }
     
-    public function getRecent($limit)
+    public function getRecent($limit = 6)
     {
-        $this->db->connect();
-        $limit = (int)$limit;
-        $query = "SELECT a.*, t.libelle as type_libelle 
-                  FROM actualites a 
-                  LEFT JOIN types_actualites t ON a.type_actualite_id = t.id_type
-                  ORDER BY a.date_publication DESC 
-                  LIMIT $limit";
-        $result = $this->db->query($query);
-        $this->db->disconnect();
-        return $result;
+        return $this->selectAll('actualites', [], 'date_publication', 'DESC', $limit);
     }
     
     public function getById($id)
     {
-        $this->db->connect();
-        $query = "SELECT a.*, t.libelle as type_libelle 
-                  FROM actualites a 
-                  LEFT JOIN types_actualites t ON a.type_actualite_id = t.id_type
-                  WHERE a.id_actualite = :id";
-        $result = $this->db->query($query, ['id' => $id]);
-        $this->db->disconnect();
-        return $result[0] ?? null;
+        return $this->selectById('actualites', $id, 'id_actualite');
+    }
+
+    public function getAll()
+    {
+        return $this->selectAll('actualites', [], 'date_publication', 'DESC');
+    }
+    
+    public function getByType($typeId, $limit = null)
+    {
+        return $this->selectAll('actualites', [
+            'type_actualite_id' => $typeId
+        ], 'date_publication', 'DESC', $limit);
+    }
+
+    public function searchByTitle($search)
+    {
+        return $this->search('actualites', 'titre', $search);
+    }
+    
+    public function countByType($typeId)
+    {
+        return $this->count('actualites', ['type_actualite_id' => $typeId]);
     }
 }
 ?>
