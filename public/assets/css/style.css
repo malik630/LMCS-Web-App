@@ -16,27 +16,6 @@
     background: #555;
 }
 
-.member-row {
-    transition: all 0.2s ease;
-}
-
-.sort-icon {
-    display: inline-block;
-    color: #9CA3AF;
-    font-size: 0.875rem;
-    transition: color 0.2s;
-}
-
-th:hover .sort-icon {
-    color: #4B5563;
-}
-
-.line-clamp-3 {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
 @media print {
     .no-print {
         display: none !important;

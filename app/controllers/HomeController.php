@@ -7,14 +7,15 @@ class HomeController extends Controller
         $actualiteModel = $this->model('Actualite');
         $eventModel = $this->model('Event');
         $partnerModel = $this->model('Partner');
-        $teamModel = $this->model('Team');
+        $userModel = $this->model('User');
         
         $data = [
             'slider' => $actualiteModel->getAllForSlider(),
             'actualites' => $actualiteModel->getRecent(6),
+            'director' => $userModel->getDirector(),
+            'chef_equipes' => $userModel->getChefEquipes(),
             'evenements' => $eventModel->getUpcoming(),
             'partenaires' => $partnerModel->getAll(),
-            'teams' => $teamModel->getAll()
         ];
         
         $this->view('HomeView', $data);

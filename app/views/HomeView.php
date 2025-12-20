@@ -55,7 +55,10 @@ class HomeView extends View
     
     private function renderPresentationSection()
     {
-        Section::create(null, function() {
+        $director = $this->get('director');
+        $chefEquipes = $this->get('chef_equipes') ?? [];
+
+        Section::create(null, function () use ($director, $chefEquipes) {
             ?>
 <h2 class="text-3xl font-bold mb-6">À propos du Laboratoire</h2>
 <div class="grid md:grid-cols-2 gap-8">
@@ -72,6 +75,56 @@ class HomeView extends View
     </div>
     <div>
         <h3 class="text-xl font-bold mb-4">Nos Équipes</h3>
+        <div class="space-y-6 mb-6">
+            <?php if ($director): ?>
+            <div class="bg-blue-50 border-2 border-blue-600 rounded-lg p-4">
+                <div class="text-xs font-semibold text-blue-600 mb-2 text-center">Directeur du laboratoire</div>
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0">
+                        <?php 
+                        ob_start();
+                        ImageHelper::renderUserPhoto($director, 12);
+                        $photoHtml = ob_get_clean();
+                        echo str_replace('w-24 h-24', 'w-16 h-16', $photoHtml);
+                        ?>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-900 text-sm">
+                            <?php echo $this->escape($director['prenom'] . ' ' . $director['nom']); ?>
+                        </div>
+                        <div class="text-xs text-gray-600"><?php echo $this->escape($director['grade']); ?></div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($chefEquipes)): ?>
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <div class="text-xs font-semibold text-green-700 mb-3 text-center">Chefs d'Équipes</div>
+                <div class="space-y-3">
+                    <?php foreach ($chefEquipes as $chef): ?>
+                    <div class="flex items-center gap-3 pb-2 border-b border-green-200 last:border-0">
+                        <div class="flex-shrink-0">
+                            <?php 
+                            ob_start();
+                            ImageHelper::renderUserPhoto($chef, 12);
+                            $photoHtml = ob_get_clean();
+                            echo str_replace('w-24 h-24', 'w-12 h-12', $photoHtml);
+                            ?>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-gray-900 text-xs">
+                                <?php echo $this->escape($chef['prenom'] . ' ' . $chef['nom']); ?>
+                            </div>
+                            <div class="text-xs text-green-700 font-medium">
+                                <?php echo $this->escape($chef['team_nom']); ?></div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
         <?php echo HtmlHelper::linkWithIcon('Voir toutes les équipes', BASE_URL . 'team', 'arrow-right', 'text-blue-600 hover:text-blue-800 font-semibold mt-4'); ?>
     </div>
 </div>

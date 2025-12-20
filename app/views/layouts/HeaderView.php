@@ -167,7 +167,7 @@ class HeaderView extends View
     {
         $menuItems = [
             '' => 'Accueil',
-            'project' => 'Projets',
+            'projet' => 'Projets',
             'publication' => 'Publications',
             'equipement' => 'Équipements',
             'team' => 'Membres',

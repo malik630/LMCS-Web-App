@@ -116,5 +116,39 @@ class Team extends Model
                   ORDER BY pub.annee DESC, pub.date_publication DESC";
         return $this->select($query, ['teamId' => $teamId]);
     }
+
+    public function getAllWithDetails()
+    {
+        $query = "SELECT t.*, 
+                         u.nom as chef_nom, u.prenom as chef_prenom, u.grade as chef_grade,
+                         COUNT(DISTINCT tm.usr_id) as nb_membres,
+                         COUNT(DISTINCT p.id_publication) as nb_publications
+                  FROM teams t
+                  LEFT JOIN users u ON t.chef_id = u.id_user
+                  LEFT JOIN team_members tm ON t.id_team = tm.team_id AND tm.is_deleted = 0
+                  LEFT JOIN publications p ON p.projet_id IN (
+                      SELECT proj.id_projet FROM projets proj
+                      JOIN projet_membres pm ON proj.id_projet = pm.projet_id
+                      WHERE pm.usr_id = tm.usr_id AND pm.is_deleted = 0 AND proj.is_deleted = 0
+                  ) AND p.is_deleted = 0
+                  WHERE t.is_deleted = 0
+                  GROUP BY t.id_team
+                  ORDER BY t.nom ASC";
+        return $this->select($query);
+    }
+    
+    public function getUserTeams($userId)
+    {
+        $query = "SELECT t.*, tm.role_dans_equipe, tm.date_adhesion,
+                         u.nom as chef_nom, u.prenom as chef_prenom
+                  FROM team_members tm
+                  JOIN teams t ON tm.team_id = t.id_team
+                  LEFT JOIN users u ON t.chef_id = u.id_user
+                  WHERE tm.usr_id = :userId
+                  AND t.is_deleted = 0 
+                  AND tm.is_deleted = 0
+                  ORDER BY t.nom ASC";
+        return $this->select($query, ['userId' => $userId]);
+    }
 }
 ?>

@@ -89,7 +89,9 @@ class FooterView extends View
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="<?php echo ASSETS_URL; ?>js/slider.js"></script>
 <script src="<?php echo ASSETS_URL; ?>js/pagination.js"></script>
-<script src="<?php echo ASSETS_URL; ?>js/Search-Sort.js"></script>
+<script src="<?php echo ASSETS_URL; ?>js/projet-details.js"></script>
+<script src="<?php echo ASSETS_URL; ?>js/filter-search-sort.js"></script>
+<script src="<?php echo ASSETS_URL; ?>js/table-manager.js"></script>
 <?php
     }
     

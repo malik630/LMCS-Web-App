@@ -4,36 +4,52 @@ class Equipement extends Model
 {
     public function getAll()
     {
-        return $this->selectAll('equipements', ['is_deleted' => 0], 'nom', 'ASC');
+        $query = "SELECT e.*, te.libelle as type_libelle
+                  FROM equipements e
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  WHERE e.is_deleted = 0 
+                  ORDER BY e.nom ASC";
+        return $this->select($query);
     }
     
     public function getById($id)
     {
-        return $this->selectById('equipements', $id, 'id_equipement');
+        $query = "SELECT e.*, te.libelle as type_libelle
+                  FROM equipements e
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  WHERE e.id_equipement = :id AND e.is_deleted = 0";
+        $result = $this->select($query, ['id' => $id]);
+        return $result[0] ?? null;
     }
     
     public function getAvailable()
     {
-        return $this->selectAll('equipements', [
-            'etat' => 'libre',
-            'is_deleted' => 0
-        ], 'nom', 'ASC');
+        $query = "SELECT e.*, te.libelle as type_libelle
+                  FROM equipements e
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  WHERE e.etat = 'libre' AND e.is_deleted = 0
+                  ORDER BY e.nom ASC";
+        return $this->select($query);
     }
     
     public function getByType($typeId)
     {
-        return $this->selectAll('equipements', [
-            'type_equipement_id' => $typeId,
-            'is_deleted' => 0
-        ], 'nom', 'ASC');
+        $query = "SELECT e.*, te.libelle as type_libelle
+                  FROM equipements e
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  WHERE e.type_equipement_id = :typeId AND e.is_deleted = 0
+                  ORDER BY e.nom ASC";
+        return $this->select($query, ['typeId' => $typeId]);
     }
     
     public function getByEtat($etat)
     {
-        return $this->selectAll('equipements', [
-            'etat' => $etat,
-            'is_deleted' => 0
-        ], 'nom', 'ASC');
+        $query = "SELECT e.*, te.libelle as type_libelle
+                  FROM equipements e
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  WHERE e.etat = :etat AND e.is_deleted = 0
+                  ORDER BY e.nom ASC";
+        return $this->select($query, ['etat' => $etat]);
     }
     
     public function getByLocalisation($localisation)
@@ -92,7 +108,7 @@ class Equipement extends Model
         $query = "SELECT COUNT(*) as total 
                   FROM reservations 
                   WHERE equipement_id = :equipement_id 
-                  AND statut = 'confirmee'
+                  AND statut IN ('confirmee', 'en_attente')
                   AND (
                       (date_debut <= :date_debut AND date_fin > :date_debut)
                       OR (date_debut < :date_fin AND date_fin >= :date_fin)
@@ -111,7 +127,56 @@ class Equipement extends Model
         }
         
         $result = $this->select($query, $params);
-        return (int)$result[0]['total'] === 0;
+        return (int)($result[0]['total'] ?? 0) === 0;
+    }
+    
+    public function getWithReservations($limit = 10)
+    {
+        $query = "SELECT e.*, te.libelle as type_libelle,
+                         COUNT(r.id_reservation) as nb_reservations,
+                         MAX(r.date_debut) as derniere_reservation
+                  FROM equipements e
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  LEFT JOIN reservations r ON e.id_equipement = r.equipement_id
+                  WHERE e.is_deleted = 0
+                  GROUP BY e.id_equipement
+                  ORDER BY nb_reservations DESC
+                  LIMIT " . (int)$limit;
+        return $this->select($query);
+    }
+    
+    public function getTypes()
+    {
+        return $this->selectAll('types_equipements', [], 'libelle', 'ASC');
+    }
+    
+    public function getStatistics()
+    {
+        $query = "SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN etat = 'libre' THEN 1 ELSE 0 END) as libres,
+                    SUM(CASE WHEN etat = 'reserve' THEN 1 ELSE 0 END) as reserves,
+                    SUM(CASE WHEN etat = 'maintenance' THEN 1 ELSE 0 END) as maintenance,
+                    SUM(CASE WHEN etat = 'hors_service' THEN 1 ELSE 0 END) as hors_service
+                  FROM equipements
+                  WHERE is_deleted = 0";
+        $result = $this->select($query);
+        return $result[0] ?? null;
+    }
+    
+    public function getStatisticsByType()
+    {
+        $query = "SELECT 
+                    te.id_type,
+                    te.libelle as type_libelle,
+                    COUNT(e.id_equipement) as total,
+                    SUM(CASE WHEN e.etat = 'libre' THEN 1 ELSE 0 END) as libres,
+                    SUM(CASE WHEN e.etat = 'reserve' THEN 1 ELSE 0 END) as reserves
+                  FROM types_equipements te
+                  LEFT JOIN equipements e ON te.id_type = e.type_equipement_id AND e.is_deleted = 0
+                  GROUP BY te.id_type
+                  ORDER BY total DESC";
+        return $this->select($query);
     }
 }
 ?>

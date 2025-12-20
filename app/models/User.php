@@ -223,5 +223,60 @@ class User extends Model
             'usr_id' => $userId
         ]);
     }
+
+    public function getDirector()
+    {
+        $query = "SELECT u.* FROM users u
+                  JOIN organigramme o ON u.id_user = o.usr_id
+                  WHERE o.poste_hierarchique = 'directeur du laboratoire'
+                  AND u.is_deleted = 0
+                  LIMIT 1";
+        $result = $this->select($query);
+        return $result[0] ?? null;
+    }
+
+    public function getOrganigramme()
+    {
+        $query = "SELECT u.*, o.poste_hierarchique, o.niveau, o.superieur_id,
+                         sup.nom as superieur_nom, sup.prenom as superieur_prenom
+                  FROM organigramme o
+                  JOIN users u ON o.usr_id = u.id_user
+                  LEFT JOIN users sup ON o.superieur_id = sup.id_user
+                  WHERE u.is_deleted = 0
+                  ORDER BY o.niveau ASC, u.nom ASC";
+        return $this->select($query);
+    }
+
+    public function getChefEquipes()
+    {
+        $query = "SELECT DISTINCT u.*, t.nom as team_nom, t.id_team
+                  FROM users u
+                  JOIN teams t ON u.id_user = t.chef_id
+                  WHERE u.is_deleted = 0 AND t.is_deleted = 0
+                  ORDER BY u.nom ASC";
+        return $this->select($query);
+    }
+
+    public function getByPoste($poste)
+    {
+        $query = "SELECT u.*, o.poste_hierarchique
+                  FROM users u
+                  JOIN organigramme o ON u.id_user = o.usr_id
+                  WHERE o.poste_hierarchique = :poste
+                  AND u.is_deleted = 0
+                  ORDER BY u.nom ASC";
+        return $this->select($query, ['poste' => $poste]);
+    }
+    
+    public function getByNiveau($niveau)
+    {
+        $query = "SELECT u.*, o.poste_hierarchique, o.niveau
+                  FROM users u
+                  JOIN organigramme o ON u.id_user = o.usr_id
+                  WHERE o.niveau = :niveau
+                  AND u.is_deleted = 0
+                  ORDER BY u.nom ASC";
+        return $this->select($query, ['niveau' => $niveau]);
+    }
 }
 ?>

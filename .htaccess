@@ -1,5 +1,15 @@
 RewriteEngine On
+
+# Autoriser l'accès direct aux fichiers dans public/assets
+RewriteCond %{REQUEST_URI} ^/assets/
+RewriteRule ^ - [L]
+
+# Rediriger la racine vers public/index.php
 RewriteRule ^$ public/index.php [L]
+
+# Ne pas rediriger si le fichier existe physiquement
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+
+# Rediriger tout le reste vers public/index.php
 RewriteRule ^(.*)$ public/index.php?url=$1 [QSA,L]
