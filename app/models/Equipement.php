@@ -149,34 +149,5 @@ class Equipement extends Model
     {
         return $this->selectAll('types_equipements', [], 'libelle', 'ASC');
     }
-    
-    public function getStatistics()
-    {
-        $query = "SELECT 
-                    COUNT(*) as total,
-                    SUM(CASE WHEN etat = 'libre' THEN 1 ELSE 0 END) as libres,
-                    SUM(CASE WHEN etat = 'reserve' THEN 1 ELSE 0 END) as reserves,
-                    SUM(CASE WHEN etat = 'maintenance' THEN 1 ELSE 0 END) as maintenance,
-                    SUM(CASE WHEN etat = 'hors_service' THEN 1 ELSE 0 END) as hors_service
-                  FROM equipements
-                  WHERE is_deleted = 0";
-        $result = $this->select($query);
-        return $result[0] ?? null;
-    }
-    
-    public function getStatisticsByType()
-    {
-        $query = "SELECT 
-                    te.id_type,
-                    te.libelle as type_libelle,
-                    COUNT(e.id_equipement) as total,
-                    SUM(CASE WHEN e.etat = 'libre' THEN 1 ELSE 0 END) as libres,
-                    SUM(CASE WHEN e.etat = 'reserve' THEN 1 ELSE 0 END) as reserves
-                  FROM types_equipements te
-                  LEFT JOIN equipements e ON te.id_type = e.type_equipement_id AND e.is_deleted = 0
-                  GROUP BY te.id_type
-                  ORDER BY total DESC";
-        return $this->select($query);
-    }
 }
 ?>

@@ -119,24 +119,5 @@ class Projet extends Model
                   ORDER BY u.nom ASC, u.prenom ASC";
         return $this->select($query);
     }
-    
-    public function countByThematique()
-    {
-        $query = "SELECT thematique, COUNT(*) as count 
-                  FROM projets 
-                  WHERE is_deleted = 0 
-                  GROUP BY thematique
-                  ORDER BY count DESC";
-        return $this->select($query);
-    }
-    
-    public function countByStatut()
-    {
-        $query = "SELECT statut, COUNT(*) as count 
-                  FROM projets 
-                  WHERE is_deleted = 0 
-                  GROUP BY statut";
-        return $this->select($query);
-    }
 }
 ?>

@@ -202,7 +202,8 @@ CREATE TABLE IF NOT EXISTS reservations (
     date_debut DATETIME NOT NULL,
     date_fin DATETIME NOT NULL,
     motif TEXT,
-    statut ENUM('confirmee','annulee','terminee') DEFAULT 'confirmee',
+    nb_instances INT DEFAULT 1,
+    statut ENUM('confirmee','annulee','terminee', 'en_attente') DEFAULT 'confirmee',
     date_reservation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (equipement_id) REFERENCES equipements(id_equipement) ON DELETE CASCADE,
     FOREIGN KEY (usr_id) REFERENCES users(id_user) ON DELETE CASCADE

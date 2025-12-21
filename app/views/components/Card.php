@@ -2,7 +2,6 @@
 
 class Card
 {
-
     public static function render($config)
     {
         $type = $config['type'] ?? 'default';
@@ -131,17 +130,19 @@ class Card
             foreach ($config['items'] as $item) {
                 if (!empty($item['value'])) {
                     $itemClass = $item['class'] ?? 'text-sm text-gray-600';
-                    echo '<div class="flex items-center gap-2 ' . $itemClass . '">';
+                    echo '<div class="flex items-start gap-2 ' . $itemClass . '">';
                     
                     if (!empty($item['icon'])) {
-                        echo HtmlHelper::icon($item['icon']);
+                        echo '<span class="flex-shrink-0 mt-0.5">' . HtmlHelper::icon($item['icon']) . '</span>';
                     }
                     
+                    echo '<span class="break-words">';
                     if (!empty($item['label'])) {
                         echo '<span class="font-semibold">' . htmlspecialchars($item['label']) . ':</span> ';
                     }
                     
-                    echo '<span>' . $item['value'] . '</span>';
+                    echo htmlspecialchars($item['value']);
+                    echo '</span>';
                     echo '</div>';
                 }
             }
@@ -163,7 +164,7 @@ class Card
                 } elseif ($meta['type'] === 'icon_text') {
                     echo '<div class="flex items-center gap-2">';
                     echo HtmlHelper::icon($meta['icon'] ?? 'calendar');
-                    echo '<span>' . $meta['value'] . '</span>';
+                    echo '<span>' . htmlspecialchars($meta['value']) . '</span>';
                     echo '</div>';
                 } elseif ($meta['type'] === 'link' && !empty($meta['url'])) {
                     echo HtmlHelper::linkWithIcon($meta['text'], $meta['url'], $meta['icon'] ?? 'external-link');
@@ -181,7 +182,7 @@ class Card
         $hasLink = !empty($config['footer_link']);
         
         if ($hasButton || $hasText || $hasLink) {
-            echo '<div class="mt-4' . ($hasButton ? ' pt-4 border-t border-gray-200' : '') . '">';
+            echo '<div class="mt-auto' . ($hasButton ? ' pt-4 border-t border-gray-200' : '') . '">';
             
             if ($hasLink) {
                 $link = $config['footer_link'];
@@ -196,21 +197,62 @@ class Card
             }
             
             if ($hasButton) {
-                $btn = $config['footer_button'];
-                echo HtmlHelper::button(
-                    $btn['text'],
-                    $btn['url'],
-                    $btn['type'] ?? 'primary',
-                    $btn['icon'] ?? null,
-                    ['class' => 'w-full justify-center']
-                );
+                self::renderButton($config['footer_button']);
             }
             
             if ($hasText) {
-                echo '<p class="text-sm text-gray-500 mt-3">' . $config['footer_text'] . '</p>';
+                echo '<p class="text-sm text-gray-500 mt-3">' . htmlspecialchars($config['footer_text']) . '</p>';
             }
             
             echo '</div>';
+        }
+    }
+    
+    // ✅ NOUVELLE MÉTHODE: Rendu des boutons simplifié
+    private static function renderButton($btn)
+    {
+        $colors = [
+            'primary' => 'bg-blue-600 hover:bg-blue-700 text-white',
+            'secondary' => 'bg-gray-600 hover:bg-gray-700 text-white',
+            'success' => 'bg-green-600 hover:bg-green-700 text-white',
+            'danger' => 'bg-red-600 hover:bg-red-700 text-white'
+        ];
+        
+        $colorClass = $colors[$btn['type'] ?? 'primary'] ?? $colors['primary'];
+        
+        // ✅ Classe personnalisée ou par défaut
+        $customClass = $btn['class'] ?? 'w-full justify-center';
+        $baseClass = 'px-4 py-2 rounded-lg font-semibold transition inline-flex items-center gap-2';
+        $class = $baseClass . ' ' . $colorClass . ' ' . $customClass;
+        
+        // Si c'est un lien avec confirmation
+        if (isset($btn['url']) && isset($btn['onclick_confirm'])) {
+            $onclick = "return confirm('" . addslashes($btn['onclick_confirm']) . "')";
+            echo '<a href="' . htmlspecialchars($btn['url']) . '" onclick="' . $onclick . '" class="' . $class . '">';
+            if (!empty($btn['icon'])) {
+                echo HtmlHelper::icon($btn['icon'], 'w-5 h-5');
+            }
+            echo htmlspecialchars($btn['text']);
+            echo '</a>';
+        }
+        // Si c'est un onclick personnalisé
+        elseif (isset($btn['onclick'])) {
+            echo '<button onclick="' . htmlspecialchars($btn['onclick']) . '" class="' . $class . '">';
+            if (!empty($btn['icon'])) {
+                echo HtmlHelper::icon($btn['icon'], 'w-5 h-5');
+            }
+            echo htmlspecialchars($btn['text']);
+            echo '</button>';
+        }
+        // Sinon c'est un lien simple
+        else {
+            echo HtmlHelper::button(
+                $btn['text'],
+                $btn['url'],
+                $btn['type'] ?? 'primary',
+                $btn['icon'] ?? null,
+                ['class' => $customClass]
+            );
         }
     }
 

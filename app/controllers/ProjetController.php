@@ -27,10 +27,6 @@ class ProjetController extends Controller
             'projets' => $projets,
             'thematiques' => $this->projetModel->getAllThematiques(),
             'responsables' => $this->projetModel->getAllResponsables(),
-            'stats' => [
-                'byThematique' => $this->projetModel->countByThematique(),
-                'byStatut' => $this->projetModel->countByStatut()
-            ],
             'currentFilters' => $filters
         ];
         

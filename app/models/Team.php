@@ -12,27 +12,6 @@ class Team extends Model
         return $this->selectById('teams', $id, 'id_team');
     }
 
-    public function getByChef($chefId)
-    {
-        return $this->selectAll('teams', [
-            'chef_id' => $chefId,
-            'is_deleted' => 0
-        ], 'nom', 'ASC');
-    }
-
-    public function searchTeams($search = '', $sortBy = 'nom', $sortOrder = 'ASC')
-    {
-        $allowedSort = ['nom', 'thematique', 'date_creation'];
-        $sortBy = in_array($sortBy, $allowedSort) ? $sortBy : 'nom';
-        $sortOrder = strtoupper($sortOrder) === 'DESC' ? 'DESC' : 'ASC';
-        
-        if (empty($search)) {
-            return $this->selectAll('teams', ['is_deleted' => 0], $sortBy, $sortOrder);
-        }
-        
-        return $this->search('teams', 'nom', $search, ['is_deleted' => 0]);
-    }
-    
     public function countAll()
     {
         return $this->count('teams', ['is_deleted' => 0]);

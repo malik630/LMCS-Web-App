@@ -17,9 +17,11 @@ class DashboardView extends View
             'soumis' => ['text' => 'Soumis', 'type' => 'warning']
         ],
         'reservation' => [
+            'en_attente' => ['text' => 'En attente', 'type' => 'warning'],
             'confirmee' => ['text' => 'Confirmée', 'type' => 'success'],
             'annulee' => ['text' => 'Annulée', 'type' => 'danger'],
-            'terminee' => ['text' => 'Terminée', 'type' => 'info']
+            'terminee' => ['text' => 'Terminée', 'type' => 'info'],
+            'demande_annulation' => ['text' => 'Demande d\'annulation', 'type' => 'orange']
         ]
     ];
     
@@ -27,6 +29,7 @@ class DashboardView extends View
         'projets' => ['title' => 'Mes Projets', 'empty' => 'Aucun projet en cours'],
         'publications' => ['title' => 'Mes Publications', 'empty' => 'Aucune publication'],
         'reservations' => ['title' => 'Mes Réservations', 'empty' => 'Aucune réservation'],
+        'historique' => ['title' => 'Historique de mes réservations', 'empty' => 'Aucun historique'],
         'equipes' => ['title' => 'Mes Équipes', 'empty' => 'Aucune équipe']
     ];
     
@@ -108,6 +111,7 @@ class DashboardView extends View
             'projets' => 'buildProjetCard',
             'publications' => 'buildPublicationCard',
             'reservations' => 'buildReservationCard',
+            'historique' => 'buildHistoriqueCard',
             'equipes' => 'buildEquipeCard'
         ];
         
@@ -190,26 +194,92 @@ class DashboardView extends View
     
     private function buildReservationCard(array $reservation)
     {
-        $status = $this->statusConfig['reservation'][$reservation['statut']] ?? null;
+        $status = $this->statusConfig['reservation'][$reservation['statut']] ?? 
+                  ['text' => ucfirst($reservation['statut']), 'type' => 'info'];
+        
+        $items = [
+            ['label' => 'Du', 'value' => DateHelper::format($reservation['date_debut'], 'd/m/Y H:i')],
+            ['label' => 'Au', 'value' => DateHelper::format($reservation['date_fin'], 'd/m/Y H:i')]
+        ];
+        
+        if (!empty($reservation['motif'])) {
+            $items[] = ['label' => 'Motif', 'value' => $reservation['motif']];
+        }
+        
+        if (!empty($reservation['nb_instances'])) {
+            $items[] = ['label' => 'Quantité', 'value' => $reservation['nb_instances']];
+        }
+        
+        // ✅ CORRECTION: Ne pas afficher le bouton si demande d'annulation déjà envoyée
+        $footerButton = null;
+        if (in_array($reservation['statut'], ['en_attente', 'confirmee'])) {
+            $footerButton = [
+                'text' => 'Demander l\'annulation',
+                'url' => BASE_URL . 'reservation/cancel/' . $reservation['id_reservation'],
+                'type' => 'danger',
+                'onclick_confirm' => 'Êtes-vous sûr de vouloir demander l\'annulation de cette réservation ?',
+                // Ajout d'une classe personnalisée pour limiter la largeur
+                'class' => 'inline-flex'
+            ];
+        }
         
         return [
             'title' => $reservation['equipement_nom'],
-            'items' => [
-                ['label' => 'Du', 'value' => DateHelper::format($reservation['date_debut'], 'd/m/Y H:i')],
-                ['label' => 'Au', 'value' => DateHelper::format($reservation['date_fin'], 'd/m/Y H:i')]
-            ],
-            'badge' => $status['text'] ?? null,
-            'badge_type' => $status['type'] ?? 'primary'
+            'items' => $items,
+            'badge' => $status['text'],
+            'badge_type' => $status['type'],
+            'footer_button' => $footerButton
         ];
     }
     
     private function buildEquipeCard(array $equipe)
     {
+        $nbMembres = $equipe['nb_membres'] ?? null;
+        
+        $items = [];
+        
+        if (!empty($equipe['role_dans_equipe'])) {
+            $items[] = ['label' => 'Mon rôle', 'value' => $equipe['role_dans_equipe']];
+        }
+        
+        if ($nbMembres !== null) {
+            $items[] = ['label' => 'Membres', 'value' => $nbMembres . ' membre' . ($nbMembres > 1 ? 's' : '')];
+        }
+
+        $footerLink = [
+            'text' => 'Voir l\'équipe',
+            'url' => BASE_URL . 'team/detail/' . $equipe['id_team'],
+            'icon' => 'arrow-right'
+        ];
+        
         return [
             'title' => $equipe['nom'],
             'description' => $equipe['thematique'] ?? null,
-            'badge' => $equipe['role_dans_equipe'] ?? null,
-            'badge_type' => 'orange'
+            'badge' => $equipe['role_dans_equipe'] ?? 'Membre',
+            'badge_type' => 'orange',
+            'items' => $items,
+            'footer_link' => $footerLink
+        ];
+    }
+    
+    // ✅ Simple : afficher l'historique
+    private function buildHistoriqueCard(array $h)
+    {
+        $actions = [
+            'reservation' => ['text' => 'Réservation', 'type' => 'primary'],
+            'annulation' => ['text' => 'Annulation', 'type' => 'danger'],
+            'fin_utilisation' => ['text' => 'Fin d\'utilisation', 'type' => 'success']
+        ];
+        
+        $action = $actions[$h['action']] ?? ['text' => $h['action'], 'type' => 'info'];
+        
+        return [
+            'title' => $h['equipement_nom'],
+            'badge' => $action['text'],
+            'badge_type' => $action['type'],
+            'items' => [
+                ['label' => 'Date', 'value' => DateHelper::format($h['date_action'], 'd/m/Y H:i')]
+            ]
         ];
     }
 }

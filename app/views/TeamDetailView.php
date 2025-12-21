@@ -229,7 +229,7 @@ class TeamDetailView extends View
 <div class="flex gap-3">
     <?php echo HtmlHelper::linkWithIcon(
         'Voir les détails',
-        BASE_URL . 'publication/view/' . $pub['id_publication'],
+        BASE_URL . 'publication/index/',
         'arrow-right',
         'text-blue-600 hover:text-blue-800 font-semibold text-sm'
     ); ?>

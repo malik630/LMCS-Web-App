@@ -182,18 +182,36 @@ class User extends Model
         return $this->select($query, ['userId' => $userId]);
     }
 
+    public function getUserHistory($userId)
+    {
+        $query = "SELECT h.*, e.nom as equipement_nom, te.libelle as type_equipement
+                  FROM historique_equipements h
+                  JOIN equipements e ON h.equipement_id = e.id_equipement
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  WHERE h.usr_id = :userId
+                  ORDER BY h.date_action DESC
+                  LIMIT 50";
+        return $this->select($query, ['userId' => $userId]);
+    }
+
     public function getUserTeams($userId)
     {
         $query = "SELECT t.*, tm.role_dans_equipe, tm.date_adhesion,
-                         u.nom as chef_nom, u.prenom as chef_prenom
-                  FROM teams t
-                  LEFT JOIN team_members tm ON t.id_team = tm.team_id
-                  LEFT JOIN users u ON t.chef_id = u.id_user
-                  WHERE (t.chef_id = :userId OR tm.usr_id = :userId2)
-                  AND t.is_deleted = 0 
-                  AND (tm.is_deleted = 0 OR tm.is_deleted IS NULL)
-                  ORDER BY t.nom ASC";
-        return $this->select($query, ['userId' => $userId, 'userId2' => $userId]);
+                        u.nom as chef_nom, u.prenom as chef_prenom,
+                        COUNT(DISTINCT tm2.usr_id) as nb_membres
+                FROM teams t
+                LEFT JOIN team_members tm ON t.id_team = tm.team_id AND tm.usr_id = :userId AND tm.is_deleted = 0
+                LEFT JOIN team_members tm2 ON t.id_team = tm2.team_id AND tm2.is_deleted = 0
+                LEFT JOIN users u ON t.chef_id = u.id_user
+                WHERE (t.chef_id = :userId2 OR tm.usr_id = :userId3)
+                AND t.is_deleted = 0
+                GROUP BY t.id_team
+                ORDER BY t.nom ASC";
+            return $this->select($query, [
+            'userId' => $userId, 
+            'userId2' => $userId,
+            'userId3' => $userId
+        ]);
     }
 
     public function getUserDocuments($userId)
