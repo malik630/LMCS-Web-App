@@ -208,7 +208,6 @@ class Card
         }
     }
     
-    // ✅ NOUVELLE MÉTHODE: Rendu des boutons simplifié
     private static function renderButton($btn)
     {
         $colors = [
@@ -219,8 +218,7 @@ class Card
         ];
         
         $colorClass = $colors[$btn['type'] ?? 'primary'] ?? $colors['primary'];
-        
-        // ✅ Classe personnalisée ou par défaut
+
         $customClass = $btn['class'] ?? 'w-full justify-center';
         $baseClass = 'px-4 py-2 rounded-lg font-semibold transition inline-flex items-center gap-2';
         $class = $baseClass . ' ' . $colorClass . ' ' . $customClass;
@@ -266,7 +264,7 @@ class Card
             'description' => $data['contenu'] ?? '',
             'footer_link' => !empty($data['detail']) ? [
                 'text' => 'En savoir plus',
-                'url' => BASE_URL . 'actualite/view/' . $data['id_actualite']
+                'url' => BASE_URL . 'actualite/index/'
             ] : null,
             'footer_text' => !empty($data['date_publication']) ? DateHelper::format($data['date_publication']) : null
         ]);

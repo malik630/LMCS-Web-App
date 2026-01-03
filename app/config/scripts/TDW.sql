@@ -247,7 +247,7 @@ CREATE TABLE IF NOT EXISTS inscriptions_evenements (
     nom VARCHAR(100),
     email VARCHAR(150),
     date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    statut ENUM('inscrit','confirmee','annulee') DEFAULT 'inscrit',
+    statut ENUM('en_attente','confirmee','annulee', 'demande_annulation') DEFAULT 'en_attente',
     FOREIGN KEY (evenement_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE,
     FOREIGN KEY (usr_id) REFERENCES users(id_user) ON DELETE SET NULL
 );
@@ -362,6 +362,160 @@ CREATE TABLE IF NOT EXISTS historique_equipements (
     date_action DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (equipement_id) REFERENCES equipements(id_equipement) ON DELETE CASCADE,
     FOREIGN KEY (usr_id) REFERENCES users(id_user) ON DELETE SET NULL
+);
+
+-- ============================================================
+-- 26. permissions
+-- ============================================================
+CREATE TABLE IF NOT EXISTS permissions (
+    id_permission INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    categorie VARCHAR(50) NOT NULL,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================================
+--  27. user_permissions (permissions individuelles par utilisateur)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_permissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    permission_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id_user) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id_permission) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_permission (user_id, permission_id)
+);
+
+-- ============================================================
+--  28. role_permissions (permissions par défaut par rôle - template)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS role_permissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    role ENUM('admin','enseignant-chercheur','doctorant','etudiant','invite') NOT NULL,
+    permission_id INT NOT NULL,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id_permission) ON DELETE CASCADE,
+    UNIQUE KEY unique_role_permission (role, permission_id)
+);
+
+-- ============================================================
+-- Insertion des permissions de base
+-- ============================================================
+
+-- Catégorie : Utilisateurs
+INSERT INTO permissions (nom, description, categorie) VALUES
+('users.view', 'Consulter les utilisateurs', 'Utilisateurs'),
+('users.create', 'Créer des utilisateurs', 'Utilisateurs'),
+('users.edit', 'Modifier les utilisateurs', 'Utilisateurs'),
+('users.delete', 'Supprimer les utilisateurs', 'Utilisateurs'),
+('users.suspend', 'Suspendre des utilisateurs', 'Utilisateurs'),
+('users.manage_roles', 'Gérer les rôles des utilisateurs', 'Utilisateurs');
+
+-- Catégorie : Projets
+INSERT INTO permissions (nom, description, categorie) VALUES
+('projets.view', 'Consulter les projets', 'Projets'),
+('projets.create', 'Créer des projets', 'Projets'),
+('projets.edit', 'Modifier les projets', 'Projets'),
+('projets.delete', 'Supprimer les projets', 'Projets'),
+('projets.edit_own', 'Modifier ses propres projets', 'Projets'),
+('projets.delete_own', 'Supprimer ses propres projets (si chef)', 'Projets'),
+('projets.manage_members', 'Gérer les membres des projets', 'Projets');
+
+-- Catégorie : Publications
+INSERT INTO permissions (nom, description, categorie) VALUES
+('publications.view', 'Consulter les publications', 'Publications'),
+('publications.create', 'Créer des publications', 'Publications'),
+('publications.edit', 'Modifier les publications', 'Publications'),
+('publications.delete', 'Supprimer les publications', 'Publications'),
+('publications.publish', 'Publier des publications', 'Publications'),
+('publications.edit_own', 'Modifier ses propres publications', 'Publications');
+
+-- Catégorie : Équipements
+INSERT INTO permissions (nom, description, categorie) VALUES
+('equipements.view', 'Consulter les équipements', 'Équipements'),
+('equipements.create', 'Créer des équipements', 'Équipements'),
+('equipements.edit', 'Modifier les équipements', 'Équipements'),
+('equipements.delete', 'Supprimer les équipements', 'Équipements'),
+('equipements.reserve', 'Réserver des équipements', 'Équipements'),
+('equipements.approve_reservation', 'Approuver les réservations', 'Équipements'),
+('equipements.cancel_reservation', 'Annuler les réservations', 'Équipements');
+
+-- Catégorie : Événements
+INSERT INTO permissions (nom, description, categorie) VALUES
+('evenements.view', 'Consulter les événements', 'Événements'),
+('evenements.create', 'Créer des événements', 'Événements'),
+('evenements.edit', 'Modifier les événements', 'Événements'),
+('evenements.delete', 'Supprimer les événements', 'Événements'),
+('evenements.approve_inscription', 'Approuver les inscriptions', 'Événements'),
+('evenements.cancel_inscription', 'Annuler les inscriptions', 'Événements');
+
+-- Catégorie : Équipes
+INSERT INTO permissions (nom, description, categorie) VALUES
+('equipes.view', 'Consulter les équipes', 'Équipes'),
+('equipes.create', 'Créer des équipes', 'Équipes'),
+('equipes.edit', 'Modifier les équipes', 'Équipes'),
+('equipes.delete', 'Supprimer les équipes', 'Équipes'),
+('equipes.manage_members', 'Gérer les membres des équipes', 'Équipes');
+
+-- Catégorie : Contenu
+INSERT INTO permissions (nom, description, categorie) VALUES
+('actualites.manage', 'Gérer les actualités', 'Contenu'),
+('offres.manage', 'Gérer les offres', 'Contenu'),
+('partenaires.manage', 'Gérer les partenaires', 'Contenu');
+
+-- ============================================================
+-- Attribution des permissions par rôle
+-- ============================================================
+
+-- ADMIN : Toutes les permissions
+INSERT INTO role_permissions (role, permission_id)
+SELECT 'admin', id_permission FROM permissions;
+
+-- ENSEIGNANT-CHERCHEUR : Permissions étendues
+INSERT INTO role_permissions (role, permission_id)
+SELECT 'enseignant-chercheur', id_permission FROM permissions
+WHERE nom IN (
+    'users.view',
+    'projets.view', 'projets.create', 'projets.edit_own', 'projets.delete_own', 'projets.manage_members',
+    'publications.view', 'publications.create', 'publications.edit_own', 'publications.publish',
+    'equipements.view', 'equipements.reserve', 'equipements.cancel_reservation',
+    'evenements.view', 'evenements.create',
+    'equipes.view', 'equipes.manage_members'
+);
+
+-- DOCTORANT : Permissions moyennes
+INSERT INTO role_permissions (role, permission_id)
+SELECT 'doctorant', id_permission FROM permissions
+WHERE nom IN (
+    'users.view',
+    'projets.view', 'projets.create', 'projets.edit_own',
+    'publications.view', 'publications.create', 'publications.edit_own',
+    'equipements.view', 'equipements.reserve', 'equipements.cancel_reservation',
+    'evenements.view',
+    'equipes.view'
+);
+
+-- ÉTUDIANT : Permissions limitées
+INSERT INTO role_permissions (role, permission_id)
+SELECT 'etudiant', id_permission FROM permissions
+WHERE nom IN (
+    'users.view',
+    'projets.view',
+    'publications.view',
+    'equipements.view', 'equipements.reserve', 'equipements.cancel_reservation',
+    'evenements.view',
+    'equipes.view'
+);
+
+-- INVITÉ : Permissions minimales
+INSERT INTO role_permissions (role, permission_id)
+SELECT 'invite', id_permission FROM permissions
+WHERE nom IN (
+    'projets.view',
+    'publications.view',
+    'equipements.view',
+    'evenements.view',
+    'equipes.view'
 );
 
 -- ============================================================

@@ -29,7 +29,8 @@ class DashboardView extends View
         'projets' => ['title' => 'Mes Projets', 'empty' => 'Aucun projet en cours'],
         'publications' => ['title' => 'Mes Publications', 'empty' => 'Aucune publication'],
         'reservations' => ['title' => 'Mes Réservations', 'empty' => 'Aucune réservation'],
-        'historique' => ['title' => 'Historique de mes réservations', 'empty' => 'Aucun historique'],
+        'inscriptions' => ['title' => 'Mes Inscriptions', 'empty' => 'Aucune inscription'],
+        'historique' => ['title' => 'Historique des réservations', 'empty' => 'Aucun historique'],
         'equipes' => ['title' => 'Mes Équipes', 'empty' => 'Aucune équipe']
     ];
     
@@ -112,6 +113,7 @@ class DashboardView extends View
             'publications' => 'buildPublicationCard',
             'reservations' => 'buildReservationCard',
             'historique' => 'buildHistoriqueCard',
+            'inscriptions' => 'buildInscriptionCard',
             'equipes' => 'buildEquipeCard'
         ];
         
@@ -159,7 +161,7 @@ class DashboardView extends View
             'title' => $pub['titre'],
             'meta' => [
                 ['type' => 'text', 'value' => $pub['annee']],
-                ['type' => 'badge', 'value' => $pub['type_libelle'] ?? null, 'badge_type' => 'success']
+                ['type' => 'badge', 'value' => ucfirst($pub['type_libelle']) ?? null, 'badge_type' => 'success']
             ],
             'description' => $pub['resume'] ?? null,
             'items' => $this->buildPublicationItems($pub),
@@ -209,8 +211,7 @@ class DashboardView extends View
         if (!empty($reservation['nb_instances'])) {
             $items[] = ['label' => 'Quantité', 'value' => $reservation['nb_instances']];
         }
-        
-        // ✅ CORRECTION: Ne pas afficher le bouton si demande d'annulation déjà envoyée
+
         $footerButton = null;
         if (in_array($reservation['statut'], ['en_attente', 'confirmee'])) {
             $footerButton = [
@@ -218,7 +219,6 @@ class DashboardView extends View
                 'url' => BASE_URL . 'reservation/cancel/' . $reservation['id_reservation'],
                 'type' => 'danger',
                 'onclick_confirm' => 'Êtes-vous sûr de vouloir demander l\'annulation de cette réservation ?',
-                // Ajout d'une classe personnalisée pour limiter la largeur
                 'class' => 'inline-flex'
             ];
         }
@@ -262,7 +262,6 @@ class DashboardView extends View
         ];
     }
     
-    // ✅ Simple : afficher l'historique
     private function buildHistoriqueCard(array $h)
     {
         $actions = [
@@ -280,6 +279,45 @@ class DashboardView extends View
             'items' => [
                 ['label' => 'Date', 'value' => DateHelper::format($h['date_action'], 'd/m/Y H:i')]
             ]
+        ];
+    }
+    private function buildInscriptionCard(array $inscription)
+    {
+        $statutConfig = [
+            'en_attente' => ['text' => 'En attente', 'type' => 'warning'],
+            'confirmee' => ['text' => 'Confirmée', 'type' => 'success'],
+            'demande_annulation' => ['text' => 'Demande d\'annulation', 'type' => 'orange'],
+            'annulee' => ['text' => 'Annulée', 'type' => 'danger']
+        ];
+        
+        $statut = $statutConfig[$inscription['statut']] ?? ['text' => $inscription['statut'], 'type' => 'info'];
+        
+        $items = [
+            ['label' => 'Date', 'value' => DateHelper::format($inscription['date_debut'], 'd/m/Y H:i')]
+        ];
+        
+        if (!empty($inscription['lieu'])) {
+            $items[] = ['label' => 'Lieu', 'value' => $inscription['lieu']];
+        }
+        
+        // Bouton d'annulation
+        $footerButton = null;
+        if (in_array($inscription['statut'], ['en_attente', 'confirmee'])) {
+            $footerButton = [
+                'text' => 'Annuler',
+                'url' => BASE_URL . 'event/cancelRegistration/' . $inscription['id'],
+                'type' => 'danger',
+                'onclick_confirm' => 'Êtes-vous sûr de vouloir annuler cette inscription ?',
+                'class' => 'inline-flex'
+            ];
+        }
+        
+        return [
+            'title' => $inscription['evenement_titre'],
+            'badge' => $statut['text'],
+            'badge_type' => $statut['type'],
+            'items' => $items,
+            'footer_button' => $footerButton
         ];
     }
 }

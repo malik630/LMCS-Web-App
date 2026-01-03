@@ -214,6 +214,19 @@ class User extends Model
         ]);
     }
 
+    public function getUserInscriptions($userId, $limit = 10)
+    {
+        $query = "SELECT ie.*, e.titre as evenement_titre, e.date_debut, e.date_fin, 
+                         e.lieu, te.libelle as type_evenement
+                  FROM inscriptions_evenements ie
+                  JOIN evenements e ON ie.evenement_id = e.id_evenement
+                  LEFT JOIN types_evenements te ON e.type_evenement_id = te.id_type
+                  WHERE ie.usr_id = :userId
+                  ORDER BY e.date_debut DESC
+                  LIMIT " . (int)$limit;
+        return $this->select($query, ['userId' => $userId]);
+    }
+
     public function getUserDocuments($userId)
     {
         $query = "SELECT * FROM documents_personnels 
@@ -295,6 +308,22 @@ class User extends Model
                   AND u.is_deleted = 0
                   ORDER BY u.nom ASC";
         return $this->select($query, ['niveau' => $niveau]);
+    }
+
+    public function getAllWithDetails()
+    {
+        $query = "SELECT u.*, 
+                         COUNT(DISTINCT p.id_publication) as nb_publications,
+                         COUNT(DISTINCT pr.id_projet) as nb_projets
+                  FROM users u
+                  LEFT JOIN publication_auteurs pa ON u.id_user = pa.usr_id AND pa.is_deleted = 0
+                  LEFT JOIN publications p ON pa.publication_id = p.id_publication AND p.is_deleted = 0
+                  LEFT JOIN projet_membres pm ON u.id_user = pm.usr_id AND pm.is_deleted = 0
+                  LEFT JOIN projets pr ON pm.projet_id = pr.id_projet AND pr.is_deleted = 0
+                  WHERE u.is_deleted = 0
+                  GROUP BY u.id_user
+                  ORDER BY u.nom ASC";
+        return $this->select($query);
     }
 }
 ?>

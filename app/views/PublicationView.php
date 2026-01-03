@@ -23,7 +23,7 @@ class PublicationView extends View
     {
         ?>
 <div class="mb-8">
-    <h1 class="text-4xl font-bold text-white mb-4">Base Documentaire</h1>
+    <h1 class="text-4xl font-bold text-white mb-4">Publications et Base Documentaire</h1>
     <p class="text-white text-lg">
         Consultez l'ensemble des publications scientifiques du laboratoire LMCS
     </p>
@@ -42,15 +42,16 @@ class PublicationView extends View
 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-gray-900">Recherche Avancée</h2>
-        <button id="reset-btn" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
-            Réinitialiser
+        <button id="reset-btn-publications"
+            class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition flex items-center justify-center gap-2">
+            <?php echo HtmlHelper::icon('close') ?> Réinitialiser
         </button>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         <div class="col-span-full">
             <label class="block text-sm font-medium text-gray-700 mb-2">Recherche par mots-clés</label>
-            <input type="text" id="search-input" placeholder="Titre, auteurs, résumé, DOI..."
+            <input type="text" id="search-input-publications" placeholder="Titre, auteurs, résumé, DOI..."
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
         </div>
 
@@ -66,7 +67,8 @@ class PublicationView extends View
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-            <select id="filter-type" class="filter-select w-full px-4 py-2 border border-gray-300 rounded-lg">
+            <select id="filter-type-publication"
+                class="filter-select w-full px-4 py-2 border border-gray-300 rounded-lg">
                 <option value="">Tous les types</option>
                 <?php foreach ($types as $type): ?>
                 <option value="<?php echo $this->escape($type['libelle']); ?>">
@@ -99,7 +101,6 @@ class PublicationView extends View
                 </option>
                 <?php endforeach; ?>
             </select>
-            <p class="text-xs text-gray-500 mt-1">Maintenez Ctrl (Cmd sur Mac) pour sélectionner plusieurs auteurs</p>
         </div>
     </div>
 
@@ -127,7 +128,7 @@ class PublicationView extends View
     {
         $publications = $this->get('publications', []);
         ?>
-<div id="items-container">
+<div id="items-container-publications">
     <?php if (empty($publications)): ?>
     <div class="text-center py-12 text-gray-500">Aucune publication trouvée</div>
     <?php else: ?>
@@ -153,7 +154,7 @@ class PublicationView extends View
     data-doi="<?php echo $this->escape($pub['doi'] ?? ''); ?>">
 
     <div class="flex items-center gap-2 mb-3">
-        <?php echo HtmlHelper::badge($pub['type_libelle'] ?? 'Publication', 'primary'); ?>
+        <?php echo HtmlHelper::badge(ucfirst($pub['type_libelle'] ?? 'Publication'), 'primary'); ?>
         <span class="text-sm text-gray-500 font-semibold"><?php echo $pub['annee']; ?></span>
         <?php if (!empty($pub['domaine'])): ?>
         <?php echo HtmlHelper::badge($pub['domaine'], 'info'); ?>
@@ -217,16 +218,16 @@ class PublicationView extends View
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     window.filterSortSearch = new FilterSortSearch({
-        searchInput: '#search-input',
+        searchInput: '#search-input-publications',
         filterSelects: '.filter-select',
         sortSelect: '#sort-select',
-        resetButton: '#reset-btn',
-        itemsContainer: '#items-container',
+        resetButton: '#reset-btn-publications',
+        itemsContainer: '#items-container-publications',
         itemSelector: '.item-card',
         searchFields: ['data-title', 'data-authors', 'data-resume', 'data-doi'],
         filterFields: {
             '#filter-year': 'data-year',
-            '#filter-type': 'data-type',
+            '#filter-type-publication': 'data-type',
             '#filter-domain': 'data-domain'
         },
         sortFunction: function(items, sortValue) {
@@ -246,7 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     yearB = parseInt(b.getAttribute('data-year'));
                     return yearA - yearB;
                 } else {
-                    // date_desc par défaut
                     yearA = parseInt(a.getAttribute('data-year'));
                     yearB = parseInt(b.getAttribute('data-year'));
                     return yearB - yearA;

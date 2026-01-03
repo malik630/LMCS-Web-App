@@ -248,7 +248,7 @@ class MemberView extends View
     private function renderPublicationMeta(array $pub)
     {
         $metaItems = array_filter([
-            !empty($pub['type_libelle']) ? HtmlHelper::badge($pub['type_libelle'], 'primary') : null,
+            !empty($pub['type_libelle']) ? HtmlHelper::badge(ucfirst($pub['type_libelle']), 'primary') : null,
             $pub['journal'] ?? null,
             !empty($pub['volume']) ? 'Vol. ' . $pub['volume'] : null,
             !empty($pub['pages']) ? 'pp. ' . $pub['pages'] : null

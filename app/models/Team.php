@@ -89,6 +89,7 @@ class Team extends Model
                   LEFT JOIN types_publications tp ON pub.type_publication_id = tp.id_type
                   WHERE tm.team_id = :teamId 
                   AND pub.is_deleted = 0 
+                  AND pub.statut = 'publie'
                   AND pa.is_deleted = 0
                   AND tm.is_deleted = 0
                   GROUP BY pub.id_publication
@@ -101,15 +102,19 @@ class Team extends Model
         $query = "SELECT t.*, 
                          u.nom as chef_nom, u.prenom as chef_prenom, u.grade as chef_grade,
                          COUNT(DISTINCT tm.usr_id) as nb_membres,
-                         COUNT(DISTINCT p.id_publication) as nb_publications
+                         COUNT(DISTINCT pub_count.id_publication) as nb_publications
                   FROM teams t
                   LEFT JOIN users u ON t.chef_id = u.id_user
                   LEFT JOIN team_members tm ON t.id_team = tm.team_id AND tm.is_deleted = 0
-                  LEFT JOIN publications p ON p.projet_id IN (
-                      SELECT proj.id_projet FROM projets proj
-                      JOIN projet_membres pm ON proj.id_projet = pm.projet_id
-                      WHERE pm.usr_id = tm.usr_id AND pm.is_deleted = 0 AND proj.is_deleted = 0
-                  ) AND p.is_deleted = 0
+                  LEFT JOIN (
+                      SELECT p.id_publication, tm2.team_id
+                      FROM publications p
+                      JOIN publication_auteurs pa ON p.id_publication = pa.publication_id AND pa.is_deleted = 0
+                      JOIN team_members tm2 ON pa.usr_id = tm2.usr_id AND tm2.is_deleted = 0
+                      WHERE p.is_deleted = 0 AND p.statut = 'publie'
+                      GROUP BY p.id_publication, tm2.team_id
+                      HAVING COUNT(DISTINCT tm2.usr_id) >= 2
+                  ) pub_count ON pub_count.team_id = t.id_team
                   WHERE t.is_deleted = 0
                   GROUP BY t.id_team
                   ORDER BY t.nom ASC";

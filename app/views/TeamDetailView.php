@@ -179,7 +179,7 @@ class TeamDetailView extends View
             <?php echo $this->escape($pub['titre']); ?>
         </h3>
         <div class="flex-shrink-0 ml-4 flex gap-2">
-            <?php echo HtmlHelper::badge($pub['type_libelle'] ?? 'Publication', 'primary'); ?>
+            <?php echo HtmlHelper::badge(ucfirst($pub['type_libelle'] ?? 'Publication'), 'primary'); ?>
             <?php echo HtmlHelper::badge($pub['annee'], 'info'); ?>
         </div>
     </div>

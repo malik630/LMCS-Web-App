@@ -43,5 +43,10 @@ class Actualite extends Model
     {
         return $this->count('actualites', ['type_actualite_id' => $typeId]);
     }
+
+    public function getTypes()
+    {
+        return $this->selectAll('types_actualites', [], 'libelle', 'ASC');
+    }
 }
 ?>

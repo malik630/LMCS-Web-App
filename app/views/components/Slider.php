@@ -57,7 +57,7 @@ class Slider extends View
             </div>
 
             <?php if (!empty($slide['detail'])): ?>
-            <a href="<?php echo BASE_URL . 'actualite/view/' . $slide['id_actualite']; ?>"
+            <a href="<?php echo BASE_URL . 'actualite/index/' ?>"
                 class="bg-white text-blue-600 px-6 py-2 rounded font-semibold hover:bg-blue-50 transition inline-block">
                 En savoir plus
             </a>

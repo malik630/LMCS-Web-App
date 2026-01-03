@@ -17,7 +17,8 @@ class DashboardController extends Controller
             'publications' => $userModel->getUserPublications($userId),
             'reservations' => $userModel->getUserReservations($userId),
             'equipes' => $userModel->getUserTeams($userId),
-            'historique' => $userModel->getUserHistory($userId)
+            'historique' => $userModel->getUserHistory($userId),
+            'inscriptions' => $userModel->getUserInscriptions($userId)
         ];
         
         $this->view('DashboardView', $data);

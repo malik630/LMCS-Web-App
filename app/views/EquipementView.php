@@ -39,7 +39,7 @@ class EquipementView extends View
         ?>
 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
     <div class="grid md:grid-cols-4 gap-4">
-        <input type="text" id="search-input" placeholder="Rechercher..."
+        <input type="text" id="search-input-equipements" placeholder="Rechercher..."
             class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
 
         <select id="filter-type" class="filter-select px-4 py-2 border border-gray-300 rounded-lg">
@@ -60,8 +60,9 @@ class EquipementView extends View
             <option value="hors_service">Hors service</option>
         </select>
 
-        <button id="reset-btn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
-            Réinitialiser
+        <button id="reset-btn-equipements"
+            class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center justify-center gap-2">
+            <?php echo HtmlHelper::icon('close') ?> Réinitialiser
         </button>
     </div>
 </div>
@@ -101,7 +102,7 @@ class EquipementView extends View
         Liste des équipements
     </h2>
 
-    <div id="items-container">
+    <div id="items-container-equipements">
         <?php foreach ($equipementsByType as $typeId => $typeData): ?>
         <div class="thematique-section mb-8" data-type="<?php echo $typeId; ?>">
             <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-lg p-4 flex justify-between items-center">
@@ -138,9 +139,7 @@ class EquipementView extends View
         ];
         
         $etat = $etatConfig[$eq['etat']] ?? ['text' => $eq['etat'], 'type' => 'info'];
-        $isAvailable = $eq['etat'] === 'libre';
-        
-        // Tronquer la localisation si elle est trop longue
+        $isAvailable = $eq['etat'] === 'libre' || $eq['etat'] === 'reserve';
         $localisation = $eq['localisation'] ?? null;
         if ($localisation && strlen($localisation) > 40) {
             $localisation = substr($localisation, 0, 37) . '...';
@@ -172,29 +171,19 @@ class EquipementView extends View
                 ];
             }
         }
-        
-        // Card HTML
         echo '<div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full" 
                    data-title="' . htmlspecialchars(strtolower($eq['nom'])) . '" 
                    data-type="' . htmlspecialchars($eq['type_equipement_id']) . '" 
                    data-etat="' . htmlspecialchars($eq['etat']) . '">';
         
         echo '<div class="p-6 flex flex-col flex-grow">';
-        
-        // Badge état
         echo '<div class="mb-2">' . HtmlHelper::badge($etat['text'], $etat['type']) . '</div>';
-        
-        // Titre
         echo '<h3 class="text-xl font-bold mt-2 mb-3">' . htmlspecialchars($eq['nom']) . '</h3>';
-        
-        // Description
         if (!empty($eq['description'])) {
             echo '<div class="text-gray-600 mb-4 max-h-20 overflow-y-auto pr-2 custom-scrollbar flex-grow">';
             echo '<p>' . nl2br(htmlspecialchars($eq['description'])) . '</p>';
             echo '</div>';
         }
-        
-        // Items
         if (!empty($items)) {
             echo '<div class="space-y-2 mb-4">';
             foreach ($items as $item) {
@@ -212,8 +201,7 @@ class EquipementView extends View
             }
             echo '</div>';
         }
-        
-        // Footer button
+
         if ($footerButton) {
             echo '<div class="mt-auto pt-4 border-t border-gray-200">';
             if (isset($footerButton['onclick'])) {
@@ -242,7 +230,6 @@ class EquipementView extends View
         if (!isset($_SESSION['user_id'])) return;
         
         ?>
-<!-- Modal de réservation -->
 <div id="reservation-modal"
     class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -324,22 +311,19 @@ class EquipementView extends View
     {
         ?>
 <script>
-// Variables globales
-let currentEquipement = null;
+//let currentEquipement = null;
 
-// Gestion du modal
 function openReservationModal(id, nom, capacite, type) {
-    currentEquipement = {
+    /*currentEquipement = {
         id,
         nom,
         capacite,
         type
-    };
+    };*/
 
     document.getElementById('modal-equipement-id').value = id;
     document.getElementById('modal-equipement-nom').textContent = nom;
 
-    // Afficher les informations
     let info = 'Type: ' + type;
     if (capacite && type !== 'salles') {
         info += ' | Capacité: ' + capacite + ' unités';
@@ -348,7 +332,6 @@ function openReservationModal(id, nom, capacite, type) {
     }
     document.getElementById('modal-equipement-info').textContent = info;
 
-    // Gérer l'affichage du champ nb_instances
     const nbInstancesContainer = document.getElementById('nb-instances-container');
     const nbInstancesInput = document.getElementById('nb-instances');
     const capaciteInfo = document.getElementById('capacite-info');
@@ -362,18 +345,15 @@ function openReservationModal(id, nom, capacite, type) {
         nbInstancesInput.value = 1;
     }
 
-    // Réinitialiser le formulaire
     document.getElementById('reservation-form').reset();
     document.getElementById('modal-equipement-id').value = id;
     document.getElementById('availability-message').innerHTML = '';
 
-    // Définir la date minimale à maintenant
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 16);
     document.getElementById('date-debut').min = dateStr;
     document.getElementById('date-fin').min = dateStr;
 
-    // Afficher le modal
     document.getElementById('reservation-modal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 }
@@ -393,7 +373,6 @@ document.addEventListener('DOMContentLoaded', function() {
         dateFin.addEventListener('change', checkAvailability);
     }
 
-    // Gestion de la soumission du formulaire
     const form = document.getElementById('reservation-form');
     if (form) {
         form.addEventListener('submit', handleReservationSubmit);
@@ -406,12 +385,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initialiser le système de filtrage
     window.filterSortSearch = new FilterSortSearch({
-        searchInput: '#search-input',
+        searchInput: '#search-input-equipements',
         filterSelects: '.filter-select',
-        resetButton: '#reset-btn',
-        itemsContainer: '#items-container',
+        resetButton: '#reset-btn-equipements',
+        itemsContainer: '#items-container-equipements',
         itemSelector: '.bg-white.rounded-lg.shadow-lg[data-title]',
         searchFields: ['data-title'],
         filterFields: {
@@ -426,6 +404,7 @@ function checkAvailability() {
     const equipementId = document.getElementById('modal-equipement-id').value;
     const dateDebut = document.getElementById('date-debut').value;
     const dateFin = document.getElementById('date-fin').value;
+    const nbInstances = document.getElementById('nb-instances').value;
     const messageDiv = document.getElementById('availability-message');
 
     if (!equipementId || !dateDebut || !dateFin) return;
@@ -434,6 +413,7 @@ function checkAvailability() {
     formData.append('equipement_id', equipementId);
     formData.append('date_debut', dateDebut);
     formData.append('date_fin', dateFin);
+    formData.append('nb_instances', nbInstances);
 
     fetch('<?php echo BASE_URL; ?>reservation/checkAvailability', {
             method: 'POST',
@@ -444,7 +424,7 @@ function checkAvailability() {
             if (data.available) {
                 messageDiv.innerHTML =
                     '<div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">' +
-                    '<strong>✓ Disponible:</strong> Cet équipement est disponible pour cette période.' +
+                    '<strong>Disponible:</strong> Cet équipement est disponible pour cette période.' +
                     '</div>';
             } else {
                 let slotsHtml = '';
@@ -460,7 +440,7 @@ function checkAvailability() {
 
                 messageDiv.innerHTML =
                     '<div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">' +
-                    '<strong>✗ Non disponible:</strong> Cet équipement est déjà réservé pour cette période.' +
+                    '<strong>Non disponible:</strong> Cet équipement est déjà réservé pour cette période.' +
                     slotsHtml +
                     '</div>';
             }
@@ -486,14 +466,11 @@ function handleReservationSubmit(e) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Afficher le message de succès
                 const messageDiv = document.getElementById('availability-message');
                 messageDiv.innerHTML =
                     '<div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">' +
-                    '<strong>✓ Succès:</strong> ' + data.message +
+                    '<strong>Succès:</strong> ' + data.message +
                     '</div>';
-
-                // Fermer le modal après 2 secondes
                 setTimeout(() => {
                     closeReservationModal();
                     location.reload();
@@ -502,7 +479,7 @@ function handleReservationSubmit(e) {
                 const messageDiv = document.getElementById('availability-message');
                 messageDiv.innerHTML =
                     '<div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">' +
-                    '<strong>✗ Erreur:</strong> ' + data.message +
+                    '<strong>Erreur:</strong> ' + data.message +
                     '</div>';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Envoyer la demande';
@@ -513,7 +490,7 @@ function handleReservationSubmit(e) {
             const messageDiv = document.getElementById('availability-message');
             messageDiv.innerHTML =
                 '<div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">' +
-                '<strong>✗ Erreur:</strong> Une erreur est survenue lors de l\'envoi de votre demande.' +
+                '<strong>Erreur:</strong> Une erreur est survenue lors de l\'envoi de votre demande.' +
                 '</div>';
             submitBtn.disabled = false;
             submitBtn.textContent = 'Envoyer la demande';

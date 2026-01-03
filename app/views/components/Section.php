@@ -11,7 +11,7 @@ class Section extends View
         ?>
 <section class="mb-12">
     <?php if ($title): ?>
-    <h2 class="text-3xl font-serif font-bold leading-relaxed tracking-tight text-white mb-6">
+    <h2 class="text-3xl font-sans font-bold leading-relaxed tracking-tight text-white mb-6">
         <?php echo $this->escape($title); ?></h2>
     <?php endif; ?>
 

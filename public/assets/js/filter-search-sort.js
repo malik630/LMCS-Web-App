@@ -28,10 +28,8 @@ class FilterSortSearch {
   }
 
   init() {
-    // Collecter tous les items
     this.cacheItems();
 
-    // Événements
     if (this.searchInput) {
       this.searchInput.addEventListener(
         "input",
@@ -64,7 +62,6 @@ class FilterSortSearch {
   applyFilters() {
     let items = [...this.allItems];
 
-    // Recherche textuelle
     const searchTerm = this.searchInput
       ? this.searchInput.value.toLowerCase().trim()
       : "";
@@ -77,7 +74,6 @@ class FilterSortSearch {
       });
     }
 
-    // Filtres
     if (this.filterSelects.length > 0) {
       this.filterSelects.forEach((select) => {
         const filterValue = select.value;
@@ -92,7 +88,6 @@ class FilterSortSearch {
       });
     }
 
-    // Tri
     if (this.sortSelect) {
       const sortValue = this.sortSelect.value;
       items = this.config.sortFunction(items, sortValue);
@@ -102,7 +97,6 @@ class FilterSortSearch {
     this.renderItems();
     this.updateCounts();
 
-    // Callback personnalisé
     if (this.config.onUpdate) {
       this.config.onUpdate(this.filteredItems);
     }
@@ -117,16 +111,17 @@ class FilterSortSearch {
       return;
     }
 
-    // Afficher les items filtrés
+    this.hideEmptyState();
+
+    const container =
+      this.itemsContainer.querySelector(".space-y-6") || this.itemsContainer;
     this.filteredItems.forEach((item) => {
       item.style.display = "";
+      container.appendChild(item);
     });
-
-    this.hideEmptyState();
   }
 
   updateCounts() {
-    // Mettre à jour les compteurs par section (thématique, catégorie, etc.)
     const sections = this.itemsContainer.querySelectorAll(
       ".thematique-section, .category-section"
     );
@@ -146,7 +141,6 @@ class FilterSortSearch {
         })`;
       }
 
-      // Masquer la section si vide
       section.style.display = visibleItems.length > 0 ? "" : "none";
     });
   }
@@ -158,10 +152,18 @@ class FilterSortSearch {
       emptyDiv.id = "filter-empty-state";
       emptyDiv.className = "bg-white rounded-lg shadow-lg p-12 text-center";
       emptyDiv.innerHTML = `
-        <p class="text-lg font-semibold mb-2 text-gray-700">${this.config.emptyMessage}</p>
-        <button onclick="window.filterSortSearch?.reset()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-          Réinitialiser les filtres
-        </button>
+        <div class="flex flex-col items-center gap-4">
+          <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-lg font-semibold text-gray-700">${this.config.emptyMessage}</p>
+          <button onclick="window.filterSortSearch?.reset()" class="mt-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Réinitialiser les filtres
+          </button>
+        </div>
       `;
       this.itemsContainer.appendChild(emptyDiv);
     }
@@ -182,6 +184,10 @@ class FilterSortSearch {
     }
     if (this.sortSelect)
       this.sortSelect.value = this.sortSelect.options[0].value;
+    const authorSelect = document.getElementById("filter-author");
+    if (authorSelect) {
+      authorSelect.selectedIndex = -1;
+    }
 
     this.filteredItems = [...this.allItems];
     this.renderItems();
@@ -193,7 +199,6 @@ class FilterSortSearch {
   }
 
   defaultSort(items, sortValue) {
-    // Tri par défaut (peut être surchargé)
     return items;
   }
 
@@ -209,12 +214,10 @@ class FilterSortSearch {
     };
   }
 
-  // Méthode pour rafraîchir les items (si le DOM change)
   refresh() {
     this.cacheItems();
     this.applyFilters();
   }
 }
 
-// Export pour utilisation globale
 window.FilterSortSearch = FilterSortSearch;

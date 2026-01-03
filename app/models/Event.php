@@ -2,6 +2,15 @@
 
 class Event extends Model
 {
+    public function getAllWithType()
+    {
+        $query = "SELECT e.*, te.libelle as type_libelle
+                  FROM evenements e
+                  LEFT JOIN types_evenements te ON e.type_evenement_id = te.id_type
+                  ORDER BY e.date_debut DESC";
+        return $this->select($query);
+    }
+
     public function getAll()
     {
         return $this->selectAll('evenements', [], 'date_debut', 'DESC');
@@ -91,7 +100,7 @@ class Event extends Model
     public function countInscriptions($eventId)
     {
         $query = "SELECT COUNT(*) as total FROM inscriptions_evenements 
-                  WHERE evenement_id = :event_id AND statut != 'annulee'";
+                  WHERE evenement_id = :event_id AND statut != 'annulee' AND statut != 'en_attente'";
         $result = $this->select($query, ['event_id' => $eventId]);
         return (int)($result[0]['total'] ?? 0);
     }
@@ -111,7 +120,7 @@ class Event extends Model
         if ($userId) {
             $query = "SELECT COUNT(*) as total FROM inscriptions_evenements 
                       WHERE evenement_id = :event_id AND usr_id = :user_id 
-                      AND statut != 'annulee'";
+                      AND statut != 'annulee' AND statut != 'en_attente'";
             $params = ['event_id' => $eventId, 'user_id' => $userId];
         } else {
             $query = "SELECT COUNT(*) as total FROM inscriptions_evenements 
@@ -122,6 +131,25 @@ class Event extends Model
         
         $result = $this->select($query, $params);
         return (int)$result[0]['total'] > 0;
+    }
+
+    public function getInscriptionById($id)
+    {
+        $query = "SELECT ie.*, e.titre as evenement_titre, e.date_debut
+                  FROM inscriptions_evenements ie
+                  JOIN evenements e ON ie.evenement_id = e.id_evenement
+                  WHERE ie.id = :id";
+        $result = $this->select($query, ['id' => $id]);
+        return $result[0] ?? null;
+    }
+
+    public function updateInscriptionStatut($id, $statut)
+    {
+        $validStatuts = ['en_attente', 'confirmee', 'annulee', 'demande_annulation'];
+        if (!in_array($statut, $validStatuts)) {
+            return false;
+        }
+        return $this->updateById('inscriptions_evenements', $id, ['statut' => $statut]);
     }
 }
 ?>

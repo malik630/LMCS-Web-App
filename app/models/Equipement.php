@@ -21,7 +21,7 @@ class Equipement extends Model
         $result = $this->select($query, ['id' => $id]);
         return $result[0] ?? null;
     }
-    
+
     public function getAvailable()
     {
         $query = "SELECT e.*, te.libelle as type_libelle
@@ -148,6 +148,66 @@ class Equipement extends Model
     public function getTypes()
     {
         return $this->selectAll('types_equipements', [], 'libelle', 'ASC');
+    }
+
+    public function getRapportUtilisation($dateDebut, $dateFin)
+    {
+        $query = "SELECT e.nom as equipement, e.localisation,
+                         COUNT(r.id_reservation) as nb_reservations,
+                         SUM(TIMESTAMPDIFF(HOUR, r.date_debut, r.date_fin)) as heures_total,
+                         COUNT(DISTINCT r.usr_id) as nb_utilisateurs
+                  FROM equipements e
+                  LEFT JOIN reservations r ON e.id_equipement = r.equipement_id
+                      AND r.date_debut BETWEEN :debut AND :fin
+                      AND r.statut IN ('confirmee', 'terminee')
+                  WHERE e.is_deleted = 0
+                  GROUP BY e.id_equipement
+                  ORDER BY nb_reservations DESC";
+        
+        return $this->select($query, ['debut' => $dateDebut, 'fin' => $dateFin]);
+    }
+    
+    public function getRapportParUtilisateur($dateDebut, $dateFin)
+    {
+        $query = "SELECT u.nom, u.prenom, u.email,
+                         COUNT(r.id_reservation) as nb_demandes,
+                         SUM(TIMESTAMPDIFF(HOUR, r.date_debut, r.date_fin)) as heures_total
+                  FROM users u
+                  JOIN reservations r ON u.id_user = r.usr_id
+                  WHERE r.date_debut BETWEEN :debut AND :fin
+                  GROUP BY u.id_user
+                  ORDER BY nb_demandes DESC";
+        
+        return $this->select($query, ['debut' => $dateDebut, 'fin' => $dateFin]);
+    }
+    
+    public function getHistorique($limit = 100)
+    {
+        $query = "SELECT h.*, e.nom as equipement_nom, te.libelle as type_equipement,
+                         u.nom as user_nom, u.prenom as user_prenom
+                  FROM historique_equipements h
+                  JOIN equipements e ON h.equipement_id = e.id_equipement
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  LEFT JOIN users u ON h.usr_id = u.id_user
+                  ORDER BY h.date_action DESC
+                  LIMIT " . (int)$limit;
+        
+        return $this->select($query);
+    }
+    
+    public function getHistoriqueByEquipement($equipementId, $limit = 100)
+    {
+        $query = "SELECT h.*, e.nom as equipement_nom, te.libelle as type_equipement,
+                         u.nom as user_nom, u.prenom as user_prenom
+                  FROM historique_equipements h
+                  JOIN equipements e ON h.equipement_id = e.id_equipement
+                  LEFT JOIN types_equipements te ON e.type_equipement_id = te.id_type
+                  LEFT JOIN users u ON h.usr_id = u.id_user
+                  WHERE h.equipement_id = :equipement_id
+                  ORDER BY h.date_action DESC
+                  LIMIT " . (int)$limit;
+        
+        return $this->select($query, ['equipement_id' => $equipementId]);
     }
 }
 ?>

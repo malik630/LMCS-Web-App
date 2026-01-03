@@ -46,12 +46,10 @@ class ProjetView extends View
         
         ?>
 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-    <h2 class="text-xl font-bold text-gray-900 mb-4">Filtres, Recherche et Tri</h2>
-
     <div class="grid md:grid-cols-4 gap-4 mb-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Rechercher</label>
-            <input type="text" id="search-input" placeholder="Titre ou description..."
+            <input type="text" id="search-input-projets" placeholder="Titre ou description..."
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
         </div>
         <div>
@@ -100,7 +98,7 @@ class ProjetView extends View
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     window.filterSortSearch = new FilterSortSearch({
-        searchInput: '#search-input',
+        searchInput: '#search-input-projets',
         filterSelects: '.filter-select',
         sortSelect: '#sort-select',
         resetButton: '#reset-btn',
@@ -176,11 +174,11 @@ document.addEventListener('DOMContentLoaded', function() {
     {
         ?>
 <div class="mb-12 thematique-section" data-thematique="<?php echo $this->escape($thematique); ?>">
-    <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-        <span class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+    <h2 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
+        <span class="bg-blue-600 text-white px-4 py-2 rounded-md">
             <?php echo $this->escape($thematique); ?>
         </span>
-        <span class="text-blue-200 text-lg thematique-count">
+        <span class="text-white text-md thematique-count">
             (<?php echo count($projets); ?> projet<?php echo count($projets) > 1 ? 's' : ''; ?>)
         </span>
     </h2>
@@ -220,7 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
     data-projet='<?php echo htmlspecialchars(json_encode($projetData), ENT_QUOTES, 'UTF-8'); ?>'>
 
     <div class="p-6">
-        <!-- En-tête avec badge et titre -->
         <div class="flex items-start justify-between mb-4">
             <div class="flex-grow">
                 <?php echo HtmlHelper::badge($statutConfig['label'], $statutConfig['color']); ?>
@@ -228,16 +225,13 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
-        <!-- Contenu principal en deux colonnes -->
         <div class="grid md:grid-cols-3 gap-6 mb-4">
-            <!-- Description -->
             <div class="md:col-span-2">
                 <div class="text-gray-600 mb-4 max-h-20 overflow-y-auto pr-2 custom-scrollbar">
                     <?php echo nl2br($this->escape($projet['description'] ?? '')); ?>
                 </div>
             </div>
 
-            <!-- Informations clés -->
             <div class="space-y-2 text-sm">
                 <?php if (!empty($projet['responsable_nom'])): ?>
                 <div class="flex items-center gap-2 text-gray-700">
@@ -267,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
-        <!-- Bouton voir détails -->
         <div class="flex justify-end pt-4 border-t border-gray-200">
             <a href="#"
                 onclick="event.preventDefault(); toggleProjetDetails(<?php echo $projet['id_projet']; ?>); return false;"
@@ -278,7 +271,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
-    <!-- Section détails (cachée par défaut) -->
     <div id="details-<?php echo $projet['id_projet']; ?>" class="hidden"></div>
 </div>
 <?php

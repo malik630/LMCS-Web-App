@@ -136,7 +136,7 @@ function renderProjetDetails(data) {
 
       html += `
         <div class="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition">
-          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
+          <div class="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
             ${initiales}
           </div>
           <div class="flex-grow min-w-0">
@@ -173,7 +173,7 @@ function renderProjetDetails(data) {
             )}</h5>
             <div class="flex items-center gap-2 flex-shrink-0">
               <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold text-xs whitespace-nowrap">
-                ${escapeHtml(pub.type_libelle || "Publication")}
+                ${escapeHtml(capitalize(pub.type_libelle) || "Publication")}
               </span>
               <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full font-semibold text-xs">
                 ${pub.annee}
@@ -251,4 +251,9 @@ function formatDate(date) {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+function capitalize(str) {
+  if (!str) return "";
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

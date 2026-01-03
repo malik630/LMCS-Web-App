@@ -60,7 +60,7 @@ class ReservationController extends Controller
             }
             
             $reservationModel = $this->model('Reservation');
-            if ($reservationModel->hasConflict($equipementId, $dateDebut, $dateFin)) {
+            if ($reservationModel->hasConflict($equipementId, $dateDebut, $dateFin, $nbInstances)) {
                 $this->json([
                     'success' => false, 
                     'message' => 'Cet équipement est déjà réservé pour cette période.'
@@ -104,6 +104,7 @@ class ReservationController extends Controller
     
     public function checkAvailability()
     {
+        try {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->json(['error' => 'Méthode non autorisée.'], 405);
             return;
@@ -112,6 +113,7 @@ class ReservationController extends Controller
         $equipementId = $_POST['equipement_id'] ?? '';
         $dateDebut = $_POST['date_debut'] ?? '';
         $dateFin = $_POST['date_fin'] ?? '';
+        $nbInstances = intval($_POST['nb_instances'] ?? 1);
         
         if (empty($equipementId) || empty($dateDebut) || empty($dateFin)) {
             $this->json(['error' => 'Paramètres manquants.'], 400);
@@ -119,7 +121,7 @@ class ReservationController extends Controller
         }
         
         $reservationModel = $this->model('Reservation');
-        $hasConflict = $reservationModel->hasConflict($equipementId, $dateDebut, $dateFin);
+        $hasConflict = $reservationModel->hasConflict($equipementId, $dateDebut, $dateFin, $nbInstances);
         
         $reservations = $reservationModel->getByEquipement($equipementId);
         
@@ -136,6 +138,13 @@ class ReservationController extends Controller
             'available' => !$hasConflict,
             'reserved_slots' => $slots
         ]);
+    }catch (Exception $e) {
+            error_log("Exception dans ReservationController::checkAvailability: " . $e->getMessage());
+            $this->json([
+                'error' => 'Erreur lors de la vérification de disponibilité.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function cancel($reservationId)

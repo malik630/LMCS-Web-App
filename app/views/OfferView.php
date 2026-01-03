@@ -57,7 +57,6 @@ class OfferView extends View
     {
         ?>
 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-    <h2 class="text-xl font-bold text-gray-900 mb-4">Filtres</h2>
     <div class="flex flex-wrap gap-3">
         <button onclick="filterOffers('all')"
             class="filter-btn active bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition font-sans hover:bg-blue-700"
