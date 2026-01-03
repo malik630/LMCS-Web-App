@@ -154,49 +154,6 @@ class AdminPublicationRapportsView extends View
         }, 'bg-white');
         ?>
     </div>
-
-    <div class="mt-8">
-        <?php 
-        Section::create('Informations', function() {
-            ?>
-        <div class="grid md:grid-cols-3 gap-6">
-            <div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                <div class="flex items-center gap-3 mb-3">
-                    <?php echo HtmlHelper::icon('chart', 'w-8 h-8 text-blue-600'); ?>
-                    <h3 class="font-bold text-gray-900">Rapport Annuel</h3>
-                </div>
-                <p class="text-sm text-gray-700">
-                    Vue d'ensemble complète de toutes les publications d'une année avec statistiques détaillées et
-                    classement par type.
-                </p>
-            </div>
-
-            <div class="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                <div class="flex items-center gap-3 mb-3">
-                    <?php echo HtmlHelper::icon('user', 'w-8 h-8 text-green-600'); ?>
-                    <h3 class="font-bold text-gray-900">Rapport Auteur</h3>
-                </div>
-                <p class="text-sm text-gray-700">
-                    Bilan complet des publications d'un chercheur avec évolution temporelle et indicateurs de
-                    performance.
-                </p>
-            </div>
-
-            <div class="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                <div class="flex items-center gap-3 mb-3">
-                    <?php echo HtmlHelper::icon('document', 'w-8 h-8 text-purple-600'); ?>
-                    <h3 class="font-bold text-gray-900">Formats Multiples</h3>
-                </div>
-                <p class="text-sm text-gray-700">
-                    Exportez vos rapports en PDF pour présentation ou en CSV/Excel pour traitement et analyse des
-                    données.
-                </p>
-            </div>
-        </div>
-        <?php
-        }, 'bg-white');
-        ?>
-    </div>
 </div>
 
 <?php

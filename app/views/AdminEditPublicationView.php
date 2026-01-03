@@ -36,7 +36,7 @@ class AdminEditPublicationView extends View
 
     <?php 
     $self = $this;
-    Section::create('Formulaire', function() use ($publication, $types, $users, $projets, $auteurs, $inputClass, $self) { ?>
+    Section::create('', function() use ($publication, $types, $users, $projets, $auteurs, $inputClass, $self) { ?>
     <form action="<?= BASE_URL ?>adminPublication/update/<?= $publication['id_publication'] ?>" method="POST"
         class="space-y-6">
         <div class="grid md:grid-cols-2 gap-6">

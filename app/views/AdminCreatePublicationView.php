@@ -27,7 +27,7 @@ class AdminCreatePublicationView extends View
 
     <?php 
     $self = $this;
-    Section::create('Formulaire', function() use ($types, $users, $projets, $inputClass, $self) { ?>
+    Section::create('', function() use ($types, $users, $projets, $inputClass, $self) { ?>
     <form action="<?= BASE_URL ?>adminPublication/store" method="POST" class="space-y-6">
         <div class="grid md:grid-cols-2 gap-6">
             <div class="md:col-span-2">
