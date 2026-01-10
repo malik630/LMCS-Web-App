@@ -24,7 +24,10 @@ class Team extends Model
     
     public function getMembers($teamId)
     {
-        $query = "SELECT u.*, tm.role_dans_equipe, tm.date_adhesion, tm.id as member_id
+        $query = "SELECT u.*, 
+                         tm.role_dans_equipe, 
+                         tm.date_adhesion, 
+                         tm.id as member_id
                   FROM team_members tm
                   JOIN users u ON tm.usr_id = u.id_user
                   WHERE tm.team_id = :teamId 
@@ -56,17 +59,27 @@ class Team extends Model
             return false;
         }
     
-        return $this->insert('team_members', ['team_id' => $teamId, 'usr_id' => $userId, 'role_dans_equipe' => $role]);
+        return $this->insert('team_members', [
+            'team_id' => $teamId, 
+            'usr_id' => $userId, 
+            'role_dans_equipe' => $role
+        ]);
     }
 
     public function removeMember($teamId, $userId)
     {
-        return $this->update('team_members',['is_deleted' => 1],['team_id' => $teamId, 'usr_id' => $userId]);
+        return $this->update('team_members', 
+            ['is_deleted' => 1],
+            ['team_id' => $teamId, 'usr_id' => $userId]
+        );
     }
 
     public function updateMemberRole($teamId, $userId, $role)
     {
-        return $this->update('team_members', ['role_dans_equipe' => $role], ['team_id' => $teamId, 'usr_id' => $userId, 'is_deleted' => 0]);
+        return $this->update('team_members', 
+            ['role_dans_equipe' => $role], 
+            ['team_id' => $teamId, 'usr_id' => $userId, 'is_deleted' => 0]
+        );
     }
 
     public function isMember($teamId, $userId)
@@ -80,8 +93,10 @@ class Team extends Model
 
     public function getTeamPublications($teamId)
     {
-        $query = "SELECT DISTINCT pub.*, tp.libelle as type_libelle,
-                        GROUP_CONCAT(CONCAT(u.prenom, ' ', u.nom) ORDER BY pa.ordre_auteur SEPARATOR ', ') as auteurs
+        $query = "SELECT DISTINCT pub.*, 
+                         tp.libelle as type_libelle,
+                         GROUP_CONCAT(DISTINCT CONCAT(u.prenom, ' ', u.nom) ORDER BY pa.ordre_auteur SEPARATOR ', ') as auteurs,
+                         COUNT(DISTINCT pa.usr_id) as nb_auteurs_equipe
                   FROM publications pub
                   JOIN publication_auteurs pa ON pub.id_publication = pa.publication_id
                   JOIN users u ON pa.usr_id = u.id_user
@@ -96,11 +111,39 @@ class Team extends Model
                   ORDER BY pub.annee DESC, pub.date_publication DESC";
         return $this->select($query, ['teamId' => $teamId]);
     }
+    
+    public function getTeamProjets($teamId)
+    {
+        $membres = $this->getMembers($teamId);
+        
+        if (empty($membres)) {
+            return [];
+        }
+        
+        $membreIds = array_column($membres, 'id_user');
+        $placeholders = implode(',', array_fill(0, count($membreIds), '?'));
+        
+        $query = "SELECT DISTINCT p.*, 
+                         u.nom as responsable_nom, 
+                         u.prenom as responsable_prenom,
+                         COUNT(DISTINCT CASE WHEN pm.usr_id IN ($placeholders) THEN pm.usr_id END) as nb_membres_equipe
+                  FROM projets p
+                  LEFT JOIN users u ON p.responsable_id = u.id_user
+                  LEFT JOIN projet_membres pm ON p.id_projet = pm.projet_id AND pm.is_deleted = 0
+                  WHERE (p.responsable_id IN ($placeholders) OR pm.usr_id IN ($placeholders))
+                  AND p.is_deleted = 0
+                  GROUP BY p.id_projet
+                  ORDER BY p.date_creation DESC";
+        
+        return $this->select($query, array_merge($membreIds, $membreIds, $membreIds));
+    }
 
     public function getAllWithDetails()
     {
         $query = "SELECT t.*, 
-                         u.nom as chef_nom, u.prenom as chef_prenom, u.grade as chef_grade,
+                         u.nom as chef_nom, 
+                         u.prenom as chef_prenom, 
+                         u.grade as chef_grade,
                          COUNT(DISTINCT tm.usr_id) as nb_membres,
                          COUNT(DISTINCT pub_count.id_publication) as nb_publications
                   FROM teams t
@@ -123,8 +166,11 @@ class Team extends Model
     
     public function getUserTeams($userId)
     {
-        $query = "SELECT t.*, tm.role_dans_equipe, tm.date_adhesion,
-                         u.nom as chef_nom, u.prenom as chef_prenom
+        $query = "SELECT t.*, 
+                         tm.role_dans_equipe, 
+                         tm.date_adhesion,
+                         u.nom as chef_nom, 
+                         u.prenom as chef_prenom
                   FROM team_members tm
                   JOIN teams t ON tm.team_id = t.id_team
                   LEFT JOIN users u ON t.chef_id = u.id_user
@@ -135,4 +181,3 @@ class Team extends Model
         return $this->select($query, ['userId' => $userId]);
     }
 }
-?>

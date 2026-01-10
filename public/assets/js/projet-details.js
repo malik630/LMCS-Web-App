@@ -7,7 +7,11 @@ window.toggleProjetDetails = function (projetId) {
     `[data-projet*='"id_projet":${projetId}']`
   );
   const detailsDiv = document.getElementById(`details-${projetId}`);
-  const button = card.querySelector('a[onclick*="toggleProjetDetails"]');
+  const button = card
+    ? card.querySelector('button[onclick*="toggleProjetDetails"]')
+    : null;
+  const icon = button ? button.querySelector("svg") : null;
+  const textSpan = button ? button.querySelector("span") : null;
 
   if (!card || !detailsDiv) {
     console.error("Éléments non trouvés pour le projet", projetId);
@@ -29,13 +33,24 @@ window.toggleProjetDetails = function (projetId) {
       }
     }
     detailsDiv.classList.remove("hidden");
-    if (button)
-      button.querySelector("span").textContent = "Masquer les détails";
+
+    if (icon) {
+      icon.style.transform = "rotate(90deg)";
+      icon.style.transition = "transform 0.3s ease";
+    }
+    if (textSpan) {
+      textSpan.textContent = "Masquer les détails";
+    }
   } else {
     // Fermer
     detailsDiv.classList.add("hidden");
-    if (button)
-      button.querySelector("span").textContent = "Voir plus de détails";
+
+    if (icon) {
+      icon.style.transform = "rotate(0deg)";
+    }
+    if (textSpan) {
+      textSpan.textContent = "Voir plus de détails";
+    }
   }
 };
 

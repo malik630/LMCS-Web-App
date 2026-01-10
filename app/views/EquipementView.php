@@ -2,8 +2,8 @@
 
 require_once __DIR__ . '/../helpers/DateHelper.php';
 require_once __DIR__ . '/../helpers/HtmlHelper.php';
-require_once 'components/Section.php';
-require_once 'components/Card.php';
+require_once __DIR__ . '/components/Section.php';
+require_once __DIR__ . '/components/Card.php';
 
 class EquipementView extends View
 {
@@ -72,8 +72,7 @@ class EquipementView extends View
     private function renderEquipments()
     {
         $equipements = $this->data;
-        
-        // Grouper les équipements par type
+
         $equipementsByType = [];
         foreach ($equipements as $eq) {
             $typeId = $eq['type_equipement_id'] ?? 'other';
@@ -118,7 +117,7 @@ class EquipementView extends View
             <div class="bg-white rounded-b-lg shadow-lg p-6">
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <?php foreach ($typeData['items'] as $eq): ?>
-                    <?php $this->renderEquipmentCard($eq); ?>
+                    <?php Card::equipement($eq); ?>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -127,102 +126,6 @@ class EquipementView extends View
     </div>
 </div>
 <?php
-    }
-    
-    private function renderEquipmentCard($eq)
-    {
-        $etatConfig = [
-            'libre' => ['text' => 'Libre', 'type' => 'success'],
-            'reserve' => ['text' => 'Réservé', 'type' => 'warning'],
-            'maintenance' => ['text' => 'Maintenance', 'type' => 'orange'],
-            'hors_service' => ['text' => 'Hors service', 'type' => 'danger']
-        ];
-        
-        $etat = $etatConfig[$eq['etat']] ?? ['text' => $eq['etat'], 'type' => 'info'];
-        $isAvailable = $eq['etat'] === 'libre' || $eq['etat'] === 'reserve';
-        $localisation = $eq['localisation'] ?? null;
-        if ($localisation && strlen($localisation) > 40) {
-            $localisation = substr($localisation, 0, 37) . '...';
-        }
-        
-        $items = array_filter([
-            ['label' => 'Type', 'value' => $eq['type_libelle'] ?? null],
-            ['label' => 'Localisation', 'value' => $localisation],
-            ['label' => 'Capacité', 'value' => !empty($eq['capacite']) ? $eq['capacite'] . ($eq['type_libelle'] === 'salles' ? ' personnes' : ' unités') : null],
-            ['label' => 'N° série', 'value' => $eq['numero_serie'] ?? null]
-        ], fn($item) => !empty($item['value']));
-        
-        $footerButton = null;
-        if ($isAvailable) {
-            if (isset($_SESSION['user_id'])) {
-                $footerButton = [
-                    'text' => 'Réserver',
-                    'type' => 'primary',
-                    'onclick' => 'openReservationModal(' . $eq['id_equipement'] . ', \'' . 
-                                 addslashes($eq['nom']) . '\', ' . 
-                                 ($eq['capacite'] ?? 'null') . ', \'' . 
-                                 ($eq['type_libelle'] ?? '') . '\')'
-                ];
-            } else {
-                $footerButton = [
-                    'text' => 'Se connecter pour réserver',
-                    'url' => BASE_URL . 'auth/login',
-                    'type' => 'primary'
-                ];
-            }
-        }
-        echo '<div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col h-full" 
-                   data-title="' . htmlspecialchars(strtolower($eq['nom'])) . '" 
-                   data-type="' . htmlspecialchars($eq['type_equipement_id']) . '" 
-                   data-etat="' . htmlspecialchars($eq['etat']) . '">';
-        
-        echo '<div class="p-6 flex flex-col flex-grow">';
-        echo '<div class="mb-2">' . HtmlHelper::badge($etat['text'], $etat['type']) . '</div>';
-        echo '<h3 class="text-xl font-bold mt-2 mb-3">' . htmlspecialchars($eq['nom']) . '</h3>';
-        if (!empty($eq['description'])) {
-            echo '<div class="text-gray-600 mb-4 max-h-20 overflow-y-auto pr-2 custom-scrollbar flex-grow">';
-            echo '<p>' . nl2br(htmlspecialchars($eq['description'])) . '</p>';
-            echo '</div>';
-        }
-        if (!empty($items)) {
-            echo '<div class="space-y-2 mb-4">';
-            foreach ($items as $item) {
-                echo '<div class="flex items-start gap-2 text-sm text-gray-600">';
-                if (!empty($item['icon'])) {
-                    echo '<span class="flex-shrink-0 mt-0.5">' . HtmlHelper::icon($item['icon']) . '</span>';
-                }
-                echo '<span class="break-words">';
-                if (!empty($item['label'])) {
-                    echo '<span class="font-semibold">' . htmlspecialchars($item['label']) . ':</span> ';
-                }
-                echo htmlspecialchars($item['value']);
-                echo '</span>';
-                echo '</div>';
-            }
-            echo '</div>';
-        }
-
-        if ($footerButton) {
-            echo '<div class="mt-auto pt-4 border-t border-gray-200">';
-            if (isset($footerButton['onclick'])) {
-                echo '<button onclick="' . $footerButton['onclick'] . '" 
-                        class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition inline-flex items-center justify-center gap-2">';
-                echo htmlspecialchars($footerButton['text']);
-                echo '</button>';
-            } else {
-                echo HtmlHelper::button(
-                    $footerButton['text'],
-                    $footerButton['url'],
-                    $footerButton['type'],
-                    null,
-                    ['class' => 'w-full justify-center']
-                );
-            }
-            echo '</div>';
-        }
-        
-        echo '</div>'; // Close p-6
-        echo '</div>'; // Close card
     }
     
     private function renderReservationModal()
@@ -311,16 +214,7 @@ class EquipementView extends View
     {
         ?>
 <script>
-//let currentEquipement = null;
-
 function openReservationModal(id, nom, capacite, type) {
-    /*currentEquipement = {
-        id,
-        nom,
-        capacite,
-        type
-    };*/
-
     document.getElementById('modal-equipement-id').value = id;
     document.getElementById('modal-equipement-nom').textContent = nom;
 
@@ -363,7 +257,6 @@ function closeReservationModal() {
     document.body.style.overflow = 'auto';
 }
 
-// Vérifier la disponibilité lors du changement de dates
 document.addEventListener('DOMContentLoaded', function() {
     const dateDebut = document.getElementById('date-debut');
     const dateFin = document.getElementById('date-fin');
@@ -378,7 +271,6 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', handleReservationSubmit);
     }
 
-    // Fermer le modal en cliquant à l'extérieur
     document.getElementById('reservation-modal')?.addEventListener('click', function(e) {
         if (e.target === this) {
             closeReservationModal();

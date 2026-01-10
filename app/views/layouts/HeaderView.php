@@ -52,7 +52,7 @@ class HeaderView extends View
     {
         ?>
     <div class="flex items-center space-x-4">
-        <img src="<?php echo ASSETS_URL; ?>images/LMCS.png" alt="Logo" class="h-12"
+        <img src="<?php echo ASSETS_URL; ?>images/logo_labo/LMCS.png" alt="Logo" class="h-12"
             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2250%22 height=%2250%22%3E%3Crect width=%2250%22 height=%2250%22 fill=%22%23ddd%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23666%22%3ELOGO%3C/text%3E%3C/svg%3E'">
     </div>
     <?php

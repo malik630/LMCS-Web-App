@@ -2,77 +2,68 @@
 
 require_once __DIR__ . '/../helpers/DateHelper.php';
 require_once __DIR__ . '/../helpers/HtmlHelper.php';
-require_once __DIR__ . '/../helpers/ImageHelper.php';
-require_once 'components/Section.php';
-require_once 'components/Card.php';
+require_once __DIR__ . '/components/Card.php';
 
 class ProjetView extends View
 {
-    protected $pageTitle = 'Catalogue des Projets de Recherche - LMCS';
-    
-    private $statutConfig = [
-        'en_cours' => ['label' => 'En cours', 'color' => 'primary'],
-        'termine' => ['label' => 'Terminé', 'color' => 'success'],
-        'soumis' => ['label' => 'Soumis', 'color' => 'warning']
-    ];
+    protected $pageTitle = 'Projets de Recherche - LMCS';
     
     public function render()
     {
         $this->renderHeader();
-        echo '<div class="container mx-auto px-4 py-8">';
+        echo '<div class="container mx-auto px-4 py-8 max-w-7xl">';
         $this->renderPageHeader();
-        $this->renderFiltersAndSort();
+        $this->renderFilters();
         $this->renderProjets();
         echo '</div>';
         $this->renderFooter();
+        $this->renderScript();
     }
     
     private function renderPageHeader()
     {
         ?>
 <div class="mb-8">
-    <h1 class="text-4xl font-bold text-white mb-4">Catalogue des Projets de Recherche</h1>
-    <p class="text-blue-100 text-lg">
-        Découvrez les projets de recherche du laboratoire LMCS classés par thématique et statut.
+    <h1 class="text-4xl font-bold text-white mb-4">Projets de Recherche</h1>
+    <p class="text-white text-lg">
+        Découvrez l'ensemble des projets de recherche menés au sein du laboratoire LMCS
     </p>
 </div>
 <?php
     }
     
-    private function renderFiltersAndSort()
+    private function renderFilters()
     {
         $thematiques = $this->get('thematiques', []);
         $responsables = $this->get('responsables', []);
+        $currentFilters = $this->get('currentFilters', []);
         
         ?>
 <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-    <div class="grid md:grid-cols-4 gap-4 mb-4">
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Rechercher</label>
-            <input type="text" id="search-input-projets" placeholder="Titre ou description..."
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Recherche Avancée</h2>
+        <button id="reset-btn"
+            class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition flex items-center justify-center gap-2">
+            <?php echo HtmlHelper::icon('close') ?> Réinitialiser
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        <div class="col-span-full">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Recherche par mots-clés</label>
+            <input type="text" id="search-input" placeholder="Titre, description, responsable..."
+                value="<?php echo $this->escape($currentFilters['search'] ?? ''); ?>"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Thématique</label>
-            <select id="filter-thematique"
-                class="filter-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">Toutes</option>
-                <?php foreach ($thematiques as $them): ?>
-                <option value="<?php echo $this->escape($them['thematique']); ?>">
-                    <?php echo $this->escape($them['thematique']); ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Responsable</label>
-            <select id="filter-responsable"
-                class="filter-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">Tous</option>
-                <?php foreach ($responsables as $resp): ?>
-                <option value="<?php echo $resp['id_user']; ?>">
-                    <?php echo $this->escape($resp['prenom'] . ' ' . $resp['nom']); ?>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Thématique</label>
+            <select id="filter-thematique" class="filter-select w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <option value="">Toutes les thématiques</option>
+                <?php foreach ($thematiques as $thematique): ?>
+                <option value="<?php echo $this->escape($thematique['thematique']); ?>"
+                    <?php echo ($currentFilters['thematique'] ?? '') === $thematique['thematique'] ? 'selected' : ''; ?>>
+                    <?php echo $this->escape($thematique['thematique']); ?>
                 </option>
                 <?php endforeach; ?>
             </select>
@@ -80,199 +71,120 @@ class ProjetView extends View
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-            <select id="filter-statut"
-                class="filter-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <option value="">Tous</option>
-                <?php foreach ($this->statutConfig as $key => $config): ?>
-                <option value="<?php echo $key; ?>"><?php echo $config['label']; ?></option>
+            <select id="filter-statut" class="filter-select w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <option value="">Tous les statuts</option>
+                <option value="en_cours"
+                    <?php echo ($currentFilters['statut'] ?? '') === 'en_cours' ? 'selected' : ''; ?>>En cours</option>
+                <option value="termine"
+                    <?php echo ($currentFilters['statut'] ?? '') === 'termine' ? 'selected' : ''; ?>>Terminé</option>
+                <option value="soumis" <?php echo ($currentFilters['statut'] ?? '') === 'soumis' ? 'selected' : ''; ?>>
+                    Soumis</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Responsable</label>
+            <select id="filter-responsable" class="filter-select w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <option value="">Tous les responsables</option>
+                <?php foreach ($responsables as $responsable): ?>
+                <option value="<?php echo $responsable['id_user']; ?>"
+                    <?php echo ($currentFilters['responsable_id'] ?? '') == $responsable['id_user'] ? 'selected' : ''; ?>>
+                    <?php echo $this->escape($responsable['prenom'] . ' ' . $responsable['nom']); ?>
+                </option>
                 <?php endforeach; ?>
             </select>
         </div>
     </div>
 
-    <div class="flex items-center gap-4">
-        <?php echo HtmlHelper::button('Réinitialiser', null, 'secondary', 'close', ['id' => 'reset-btn']); ?>
+    <div class="flex items-center justify-between pt-4 border-t">
+        <div class="flex items-center gap-2 text-gray-600">
+            <span class="font-medium">Résultats:</span>
+            <span id="result-count" class="text-blue-600 font-bold">0</span>
+            <span>projet(s)</span>
+        </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.filterSortSearch = new FilterSortSearch({
-        searchInput: '#search-input-projets',
-        filterSelects: '.filter-select',
-        sortSelect: '#sort-select',
-        resetButton: '#reset-btn',
-        itemsContainer: '#projets-container',
-        itemSelector: '.projet-card',
-        searchFields: ['data-titre', 'data-description'],
-        filterFields: {
-            '#filter-thematique': 'data-thematique',
-            '#filter-responsable': 'data-responsable',
-            '#filter-statut': 'data-statut'
-        },
-        sortFunction: function(items, sortValue) {
-            return items.sort((a, b) => {
-                switch (sortValue) {
-                    case 'recent':
-                        const dateA = a.getAttribute('data-date-creation');
-                        const dateB = b.getAttribute('data-date-creation');
-                        if (!dateA || !dateB) return 0;
-                        return new Date(dateB).getTime() - new Date(dateA).getTime();
-
-                    case 'ancien':
-                        const dateA2 = a.getAttribute('data-date-creation');
-                        const dateB2 = b.getAttribute('data-date-creation');
-                        if (!dateA2 || !dateB2) return 0;
-                        return new Date(dateA2).getTime() - new Date(dateB2).getTime();
-
-                    case 'titre':
-                        const titreA = (a.getAttribute('data-titre') || '').toLowerCase();
-                        const titreB = (b.getAttribute('data-titre') || '').toLowerCase();
-                        return titreA.localeCompare(titreB, 'fr');
-
-                    default:
-                        return 0;
-                }
-            });
-        }
-    });
-});
-</script>
 <?php
     }
     
     private function renderProjets()
     {
         $projets = $this->get('projets', []);
-        
-        if (empty($projets)) {
-            echo HtmlHelper::emptyState('Aucun projet trouvé', 'calendar');
-            return;
-        }
-        
-        $grouped = $this->groupByThematique($projets);
-        
-        echo '<div id="projets-container">';
-        foreach ($grouped as $thematique => $projetsList) {
-            $this->renderThematiqueSection($thematique, $projetsList);
-        }
-        echo '</div>';
-    }
-    
-    private function groupByThematique(array $projets)
-    {
-        $grouped = [];
+  
+        $projetsByThematique = [];
         foreach ($projets as $projet) {
-            $them = $projet['thematique'] ?? 'Autre';
-            $grouped[$them][] = $projet;
+            $thematique = $projet['thematique'] ?? 'Non classé';
+            if (!isset($projetsByThematique[$thematique])) {
+                $projetsByThematique[$thematique] = [];
+            }
+            $projetsByThematique[$thematique][] = $projet;
         }
-        ksort($grouped);
-        return $grouped;
-    }
-    
-    private function renderThematiqueSection(string $thematique, array $projets)
-    {
-        ?>
-<div class="mb-12 thematique-section" data-thematique="<?php echo $this->escape($thematique); ?>">
-    <h2 class="text-lg font-bold text-white mb-6 flex items-center gap-3">
-        <span class="bg-blue-600 text-white px-4 py-2 rounded-md">
-            <?php echo $this->escape($thematique); ?>
-        </span>
-        <span class="text-white text-md thematique-count">
-            (<?php echo count($projets); ?> projet<?php echo count($projets) > 1 ? 's' : ''; ?>)
-        </span>
-    </h2>
 
-    <div class="space-y-6">
-        <?php foreach ($projets as $projet): ?>
-        <?php $this->renderProjetCard($projet); ?>
-        <?php endforeach; ?>
+        ksort($projetsByThematique);
+        ?>
+<div id="items-container">
+    <?php if (empty($projets)): ?>
+    <div class="text-center py-12 text-gray-500">Aucun projet trouvé</div>
+    <?php else: ?>
+    <?php foreach ($projetsByThematique as $thematique => $projetsList): ?>
+    <div class="thematique-section mb-8">
+        <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+            <?php echo $this->escape($thematique); ?>
+            <span class="thematique-count text-lg text-gray-300">(<?php echo count($projetsList); ?>
+                projet<?php echo count($projetsList) > 1 ? 's' : ''; ?>)</span>
+        </h2>
+        <div class="space-y-6">
+            <?php foreach ($projetsList as $projet): ?>
+            <?php Card::project($projet); ?>
+            <?php endforeach; ?>
+        </div>
     </div>
+    <?php endforeach; ?>
+    <?php endif; ?>
 </div>
 <?php
     }
     
-    private function renderProjetCard(array $projet)
+    private function renderScript()
     {
-        $statutConfig = $this->statutConfig[$projet['statut']] ?? ['label' => $projet['statut'], 'color' => 'info'];
-        $projetModel = new Projet();
-        $membres = $projetModel->getMembers($projet['id_projet']);
-        $publications = $projetModel->getPublications($projet['id_projet']);
-        $partenaires = $projetModel->getPartenaires($projet['id_projet']);
-        
-        // Préparer les données pour le JavaScript
-        $projetData = [
-            'projet' => $projet,
-            'membres' => $membres,
-            'publications' => $publications,
-            'partenaires' => $partenaires
-        ];
-        
         ?>
-<div class="projet-card bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow"
-    data-titre="<?php echo $this->escape(strtolower($projet['titre'])); ?>"
-    data-description="<?php echo $this->escape(strtolower($projet['description'] ?? '')); ?>"
-    data-thematique="<?php echo $this->escape($projet['thematique'] ?? 'Autre'); ?>"
-    data-responsable="<?php echo $projet['responsable_id'] ?? ''; ?>" data-statut="<?php echo $projet['statut']; ?>"
-    data-date-creation="<?php echo $projet['date_creation']; ?>"
-    data-projet='<?php echo htmlspecialchars(json_encode($projetData), ENT_QUOTES, 'UTF-8'); ?>'>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.filterSortSearch = new FilterSortSearch({
+        searchInput: '#search-input',
+        filterSelects: '.filter-select',
+        resetButton: '#reset-btn',
+        itemsContainer: '#items-container',
+        itemSelector: '.item-card',
+        searchFields: ['data-titre', 'data-description'],
+        filterFields: {
+            '#filter-thematique': 'data-thematique',
+            '#filter-statut': 'data-statut',
+            '#filter-responsable': 'data-responsable-id'
+        },
+        emptyMessage: 'Aucun projet ne correspond à vos critères.',
+        onUpdate: function(filteredItems) {
+            document.getElementById('result-count').textContent = filteredItems.length;
 
-    <div class="p-6">
-        <div class="flex items-start justify-between mb-4">
-            <div class="flex-grow">
-                <?php echo HtmlHelper::badge($statutConfig['label'], $statutConfig['color']); ?>
-                <h3 class="text-2xl font-bold text-gray-900 mt-2"><?php echo $this->escape($projet['titre']); ?></h3>
-            </div>
-        </div>
+            const sections = document.querySelectorAll('.thematique-section');
+            sections.forEach(function(section) {
+                const visibleCards = Array.from(section.querySelectorAll('.item-card'))
+                    .filter(card => card.style.display !== 'none');
 
-        <div class="grid md:grid-cols-3 gap-6 mb-4">
-            <div class="md:col-span-2">
-                <div class="text-gray-600 mb-4 max-h-20 overflow-y-auto pr-2 custom-scrollbar">
-                    <?php echo nl2br($this->escape($projet['description'] ?? '')); ?>
-                </div>
-            </div>
+                const countElement = section.querySelector('.thematique-count');
+                if (countElement) {
+                    const count = visibleCards.length;
+                    countElement.textContent = `(${count} projet${count > 1 ? 's' : ''})`;
+                }
 
-            <div class="space-y-2 text-sm">
-                <?php if (!empty($projet['responsable_nom'])): ?>
-                <div class="flex items-center gap-2 text-gray-700">
-                    <?php echo HtmlHelper::icon('user', 'w-5 h-5 text-blue-600'); ?>
-                    <span class="font-semibold">Responsable:</span>
-                    <span><?php echo $this->escape($projet['responsable_prenom'] . ' ' . $projet['responsable_nom']); ?></span>
-                </div>
-                <?php endif; ?>
+                section.style.display = visibleCards.length > 0 ? '' : 'none';
+            });
+        }
+    });
 
-                <?php if (!empty($projet['type_financement'])): ?>
-                <div class="flex items-center gap-2 text-gray-700">
-                    <?php echo HtmlHelper::icon('check', 'w-5 h-5 text-green-600'); ?>
-                    <span class="font-semibold">Financement:</span>
-                    <span><?php echo $this->escape($projet['type_financement']); ?></span>
-                </div>
-                <?php endif; ?>
-
-                <div class="flex items-center gap-2 text-gray-700">
-                    <?php echo HtmlHelper::icon('user', 'w-5 h-5 text-purple-600'); ?>
-                    <span><strong><?php echo count($membres); ?></strong> membre(s)</span>
-                </div>
-
-                <div class="flex items-center gap-2 text-gray-700">
-                    <?php echo HtmlHelper::icon('edit', 'w-5 h-5 text-orange-600'); ?>
-                    <span><strong><?php echo count($publications); ?></strong> publication(s)</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex justify-end pt-4 border-t border-gray-200">
-            <a href="#"
-                onclick="event.preventDefault(); toggleProjetDetails(<?php echo $projet['id_projet']; ?>); return false;"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">
-                <?php echo HtmlHelper::icon('arrow-right', 'w-5 h-5'); ?>
-                <span>Voir plus de détails</span>
-            </a>
-        </div>
-    </div>
-
-    <div id="details-<?php echo $projet['id_projet']; ?>" class="hidden"></div>
-</div>
+    document.getElementById('result-count').textContent = document.querySelectorAll('.item-card').length;
+});
+</script>
 <?php
     }
 }

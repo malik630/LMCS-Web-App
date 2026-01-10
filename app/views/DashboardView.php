@@ -39,6 +39,7 @@ class DashboardView extends View
         $this->renderHeader();
         echo '<div class="container mx-auto px-4 py-8">';
         $this->renderUserHeader();
+        $this->renderQuickActions();
         $this->renderDashboardSections();
         echo '</div>';
         $this->renderFooter();
@@ -74,6 +75,68 @@ class DashboardView extends View
                 'edit'
             ); ?>
         </div>
+    </div>
+</div>
+<?php
+    }
+
+    private function renderQuickActions()
+    {
+        ?>
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-white mb-4">Gestion du Compte</h2>
+    <div class="grid md:grid-cols-4 gap-6">
+        <a href="<?php echo BASE_URL; ?>dashboardpublication/index"
+            class="bg-blue-500 rounded-lg shadow-lg p-6 hover:shadow-xl transform hover:-translate-y-1 transition group">
+            <div class="text-white mb-3">
+                <?php echo HtmlHelper::icon('document', 'w-12 h-12 group-hover:scale-110 transition'); ?>
+            </div>
+            <h3 class="font-bold text-xl text-white mb-2">Mes Publications</h3>
+            <p class="text-blue-100 text-sm">Gérer et soumettre mes publications</p>
+            <div class="mt-4 flex items-center text-white text-sm font-semibold">
+                <span>Accéder</span>
+                <?php echo HtmlHelper::icon('arrow-right', 'w-4 h-4 ml-2'); ?>
+            </div>
+        </a>
+
+        <a href="<?php echo BASE_URL; ?>dashboardprojet/index"
+            class="bg-green-500 rounded-lg shadow-lg p-6 hover:shadow-xl transform hover:-translate-y-1 transition group">
+            <div class="text-white mb-3">
+                <?php echo HtmlHelper::icon('briefcase', 'w-12 h-12 group-hover:scale-110 transition'); ?>
+            </div>
+            <h3 class="font-bold text-xl text-white mb-2">Mes Projets</h3>
+            <p class="text-green-100 text-sm">Créer et gérer mes projets</p>
+            <div class="mt-4 flex items-center text-white text-sm font-semibold">
+                <span>Accéder</span>
+                <?php echo HtmlHelper::icon('arrow-right', 'w-4 h-4 ml-2'); ?>
+            </div>
+        </a>
+
+        <a href="<?php echo BASE_URL; ?>dashboardstats/index"
+            class="bg-purple-500 rounded-lg shadow-lg p-6 hover:shadow-xl transform hover:-translate-y-1 transition group">
+            <div class="text-white mb-3">
+                <?php echo HtmlHelper::icon('chart', 'w-12 h-12 group-hover:scale-110 transition'); ?>
+            </div>
+            <h3 class="font-bold text-xl text-white mb-2">Statistiques</h3>
+            <p class="text-purple-100 text-sm">Consulter mes statistiques et rapports</p>
+            <div class="mt-4 flex items-center text-white text-sm font-semibold">
+                <span>Accéder</span>
+                <?php echo HtmlHelper::icon('arrow-right', 'w-4 h-4 ml-2'); ?>
+            </div>
+        </a>
+
+        <a href="<?php echo BASE_URL; ?>dashboardteam/index"
+            class="bg-orange-500 rounded-lg shadow-lg p-6 hover:shadow-xl transform hover:-translate-y-1 transition group">
+            <div class="text-white mb-3">
+                <?php echo HtmlHelper::icon('users', 'w-12 h-12 group-hover:scale-110 transition'); ?>
+            </div>
+            <h3 class="font-bold text-xl text-white mb-2">Mes Équipes</h3>
+            <p class="text-orange-100 text-sm">Gérer mes équipes de recherche</p>
+            <div class="mt-4 flex items-center text-white text-sm font-semibold">
+                <span>Accéder</span>
+                <?php echo HtmlHelper::icon('arrow-right', 'w-4 h-4 ml-2'); ?>
+            </div>
+        </a>
     </div>
 </div>
 <?php

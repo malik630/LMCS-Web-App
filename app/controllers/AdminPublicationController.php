@@ -76,7 +76,7 @@ class AdminPublicationController extends Controller
             'resume' => $_POST['resume'] ?? null,
             'annee' => $_POST['annee'],
             'doi' => $_POST['doi'] ?? null,
-            'lien_telechargement' => $_POST['lien_telechargement'] ?? null,
+            'lien_telechargement' => $_POST['fichier_pdf'] ?? null,
             'projet_id' => $_POST['projet_id'] ?? null,
             'domaine' => $_POST['domaine'] ?? null,
             'statut' => $_POST['statut'] ?? 'publie',

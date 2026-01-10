@@ -58,7 +58,15 @@ class Projet extends Model
     
     public function getById($id)
     {
-        return $this->selectById('projets', $id, 'id_projet');
+        $query = "SELECT p.*, 
+                         u.nom as responsable_nom, 
+                         u.prenom as responsable_prenom
+                  FROM projets p
+                  LEFT JOIN users u ON p.responsable_id = u.id_user
+                  WHERE p.id_projet = :id AND p.is_deleted = 0";
+        
+        $result = $this->select($query, ['id' => $id]);
+        return $result[0] ?? null;
     }
     
     public function getMembers($projetId)
@@ -120,4 +128,3 @@ class Projet extends Model
         return $this->select($query);
     }
 }
-?>

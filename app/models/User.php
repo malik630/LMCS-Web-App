@@ -145,15 +145,20 @@ class User extends Model
     
     public function getUserProjects($userId)
     {
-        $query = "SELECT DISTINCT p.*, pm.role_projet,
-                         u.nom as responsable_nom, u.prenom as responsable_prenom
-                  FROM projets p
-                  LEFT JOIN projet_membres pm ON p.id_projet = pm.projet_id
-                  LEFT JOIN users u ON p.responsable_id = u.id_user
-                  WHERE (p.responsable_id = :userId OR pm.usr_id = :userId2)
-                  AND p.is_deleted = 0 
-                  AND (pm.is_deleted = 0 OR pm.is_deleted IS NULL)
-                  ORDER BY p.date_creation DESC";
+        $query =    "SELECT p.*, 
+                            u.nom as responsable_nom, 
+                            u.prenom as responsable_prenom,
+                            pm.role_projet
+                    FROM projets p
+                    LEFT JOIN users u ON p.responsable_id = u.id_user
+                    LEFT JOIN projet_membres pm ON p.id_projet = pm.projet_id 
+                        AND pm.usr_id = :userId 
+                        AND pm.is_deleted = 0
+                    WHERE (p.responsable_id = :userId2 OR pm.usr_id IS NOT NULL)
+                        AND p.is_deleted = 0
+                    GROUP BY p.id_projet
+                    ORDER BY p.date_creation DESC";
+    
         return $this->select($query, ['userId' => $userId, 'userId2' => $userId]);
     }
 

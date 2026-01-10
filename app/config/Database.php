@@ -5,8 +5,8 @@ class Database
     private $connection = null;
     private $host = 'localhost';
     private $dbname = 'TDW';
-    private $username = 'admin';
-    private $password = 'admin';
+    private $username = 'root';
+    private $password = '';
     private $inTransaction = false;
     
     public function connect()

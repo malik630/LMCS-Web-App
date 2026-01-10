@@ -2,7 +2,6 @@
 
 class Permission extends Model
 {
-    // Vérifier si un utilisateur a une permission spécifique
     public function userHasPermission($userId, $permissionName)
     {
         $query = "SELECT COUNT(*) as total 
@@ -18,7 +17,6 @@ class Permission extends Model
         return (int)($result[0]['total'] ?? 0) > 0;
     }
     
-    // Récupérer toutes les permissions d'un utilisateur
     public function getUserPermissions($userId)
     {
         $query = "SELECT p.* 
@@ -29,8 +27,7 @@ class Permission extends Model
         
         return $this->select($query, ['user_id' => $userId]);
     }
-    
-    // Récupérer toutes les permissions groupées par catégorie
+
     public function getAllPermissionsGrouped()
     {
         $permissions = $this->selectAll('permissions', [], 'categorie, nom', 'ASC');
@@ -43,7 +40,6 @@ class Permission extends Model
         return $grouped;
     }
     
-    // Attribuer une permission à un utilisateur
     public function assignPermissionToUser($userId, $permissionId)
     {
         return $this->insert('user_permissions', [
@@ -51,8 +47,7 @@ class Permission extends Model
             'permission_id' => $permissionId
         ]);
     }
-    
-    // Retirer une permission d'un utilisateur
+
     public function removePermissionFromUser($userId, $permissionId)
     {
         return $this->delete('user_permissions', [
@@ -60,23 +55,19 @@ class Permission extends Model
             'permission_id' => $permissionId
         ]);
     }
-    
-    // Mettre à jour toutes les permissions d'un utilisateur
+
     public function updateUserPermissions($userId, array $permissionIds)
     {
-        // Supprimer toutes les permissions actuelles
         $query = "DELETE FROM user_permissions WHERE user_id = :user_id";
         $this->select($query, ['user_id' => $userId]);
-        
-        // Ajouter les nouvelles permissions
+
         foreach ($permissionIds as $permissionId) {
             $this->assignPermissionToUser($userId, $permissionId);
         }
         
         return true;
     }
-    
-    // Récupérer les permissions par défaut d'un rôle (pour initialiser un nouvel utilisateur)
+
     public function getRoleDefaultPermissions($role)
     {
         $query = "SELECT p.* 
@@ -87,8 +78,7 @@ class Permission extends Model
         
         return $this->select($query, ['role' => $role]);
     }
-    
-    // Copier les permissions par défaut du rôle vers un utilisateur
+
     public function copyRolePermissionsToUser($userId, $role)
     {
         $defaultPermissions = $this->getRoleDefaultPermissions($role);
@@ -97,7 +87,7 @@ class Permission extends Model
         return $this->updateUserPermissions($userId, $permissionIds);
     }
     
-    // Gestion des templates de rôles )
+    // Gestion des templates de rôles
     public function roleHasPermission($role, $permissionName)
     {
         $query = "SELECT COUNT(*) as total 
@@ -126,11 +116,9 @@ class Permission extends Model
     
     public function updateRolePermissions($role, array $permissionIds)
     {
-        // Supprimer toutes les permissions actuelles du template
         $query = "DELETE FROM role_permissions WHERE role = :role";
         $this->select($query, ['role' => $role]);
-        
-        // Ajouter les nouvelles permissions
+
         foreach ($permissionIds as $permissionId) {
             $this->insert('role_permissions', [
                 'role' => $role,
@@ -139,6 +127,14 @@ class Permission extends Model
         }
         
         return true;
+    }
+
+    public function getUserPermissionIds($userId)
+    {
+        $query = "SELECT permission_id FROM user_permissions WHERE user_id = :userId";
+        $result = $this->select($query, ['userId' => $userId]);
+        
+        return array_column($result, 'permission_id');
     }
 }
 ?>

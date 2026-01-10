@@ -6,6 +6,40 @@ class Router
     private $method = 'index';
     private $params = [];
     private $routeMapping = [
+
+        // Dashboard des utilisateurs
+        'dashboardpublication/index' => ['DashboardPublicationController', 'index'],
+        'dashboardpublication/create' => ['DashboardPublicationController', 'create'],
+        'dashboardpublication/store' => ['DashboardPublicationController', 'store'],
+        'dashboardpublication/edit' => ['DashboardPublicationController', 'edit'],
+        'dashboardpublication/update' => ['DashboardPublicationController', 'update'],
+        'dashboardpublication/delete' => ['DashboardPublicationController', 'delete'],
+        'dashboardpublication/submitForApproval' => ['DashboardPublicationController', 'submitForApproval'],
+
+        'dashboardprojet/index' => ['DashboardProjetController', 'index'],
+        'dashboardprojet/detail' => ['DashboardProjetController', 'detail'],
+        'dashboardprojet/create' => ['DashboardProjetController', 'create'],
+        'dashboardprojet/store' => ['DashboardProjetController', 'store'],
+        'dashboardprojet/edit' => ['DashboardProjetController', 'edit'],
+        'dashboardprojet/update' => ['DashboardProjetController', 'update'],
+        'dashboardprojet/close' => ['DashboardProjetController', 'close'],
+        'dashboardprojet/addMember' => ['DashboardProjetController', 'addMember'],
+        'dashboardprojet/removeMember' => ['DashboardProjetController', 'removeMember'],
+
+        'dashboardstats/index' => ['DashboardStatsController', 'index'],
+        'dashboardstats/rapportPublications' => ['DashboardStatsController', 'rapportPublications'],
+        'dashboardstats/rapportProjets' => ['DashboardStatsController', 'rapportProjets'],
+        'dashboardstats/rapportReservations' => ['DashboardStatsController', 'rapportReservations'],
+        'dashboardstats/rapportComplet' => ['DashboardStatsController', 'rapportComplet'],
+
+        'dashboardteam/index' => ['DashboardTeamController', 'index'],
+        'dashboardteam/detail' => ['DashboardTeamController', 'detail'],
+        'dashboardteam/associateProjet' => ['DashboardTeamController', 'associateProjet'],
+        'dashboardteam/associatePublication' => ['DashboardTeamController', 'associatePublication'],
+        'dashboardteam/rapportEquipe' => ['DashboardTeamController', 'rapportEquipe'],
+ 
+
+        // Les pages admin
         'admin/users' => ['AdminUserController', 'index'],
         'admin/createUser' => ['AdminUserController', 'create'],
         'admin/storeUser' => ['AdminUserController', 'store'],
@@ -67,6 +101,16 @@ class Router
         'admin/rejeterReservation' => ['AdminReservationController', 'rejeter'],
         'admin/annulerReservation' => ['AdminReservationController', 'annuler'],
         'admin/detailsReservation' => ['AdminReservationController', 'details'],
+
+        'admin/parametres' => ['AdminSettingsController', 'index'],
+        'admin/updateGeneral' => ['AdminSettingsController', 'updateGeneral'],
+        'admin/updateTheme' => ['AdminSettingsController', 'updateTheme'],
+        'admin/uploadLogo' => ['AdminSettingsController', 'uploadLogo'],
+        'admin/backupDatabase' => ['AdminSettingsController', 'backupDatabase'],
+        'admin/downloadBackup' => ['AdminSettingsController', 'downloadBackup'],
+        'admin/restoreDatabase' => ['AdminSettingsController', 'restoreDatabase'],
+        'admin/deleteBackup' => ['AdminSettingsController', 'deleteBackup'],
+        'admin/listBackups' => ['AdminSettingsController', 'listBackups'],
         
         'admin/permissions' => ['AdminPermissionController', 'index'],
         'admin/updatePermissions' => ['AdminPermissionController', 'update']

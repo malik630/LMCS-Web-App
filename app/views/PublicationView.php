@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../helpers/DateHelper.php';
 require_once __DIR__ . '/../helpers/HtmlHelper.php';
+require_once __DIR__ . '/components/Card.php';
 
 class PublicationView extends View
 {
@@ -134,78 +135,8 @@ class PublicationView extends View
     <?php else: ?>
     <div class="space-y-6">
         <?php foreach ($publications as $pub): ?>
-        <?php $this->renderCard($pub); ?>
+        <?php Card::publication($pub); ?>
         <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
-</div>
-<?php
-    }
-    
-    private function renderCard($pub)
-    {
-        ?>
-<div class="item-card bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition"
-    data-title="<?php echo $this->escape($pub['titre']); ?>" data-year="<?php echo $pub['annee']; ?>"
-    data-type="<?php echo $this->escape($pub['type_libelle'] ?? ''); ?>"
-    data-domain="<?php echo $this->escape($pub['domaine'] ?? ''); ?>"
-    data-authors="<?php echo $this->escape($pub['auteurs'] ?? ''); ?>"
-    data-resume="<?php echo $this->escape($pub['resume'] ?? ''); ?>"
-    data-doi="<?php echo $this->escape($pub['doi'] ?? ''); ?>">
-
-    <div class="flex items-center gap-2 mb-3">
-        <?php echo HtmlHelper::badge(ucfirst($pub['type_libelle'] ?? 'Publication'), 'primary'); ?>
-        <span class="text-sm text-gray-500 font-semibold"><?php echo $pub['annee']; ?></span>
-        <?php if (!empty($pub['domaine'])): ?>
-        <?php echo HtmlHelper::badge($pub['domaine'], 'info'); ?>
-        <?php endif; ?>
-    </div>
-
-    <h3 class="text-xl font-bold text-gray-900 mb-2">
-        <?php echo $this->escape($pub['titre']); ?>
-    </h3>
-
-    <?php if (!empty($pub['auteurs'])): ?>
-    <p class="text-gray-600 text-sm mb-3">
-        <span class="font-semibold">Auteurs:</span> <?php echo $this->escape($pub['auteurs']); ?>
-    </p>
-    <?php endif; ?>
-
-    <?php if (!empty($pub['resume'])): ?>
-    <p class="text-gray-700 mb-4 line-clamp-3">
-        <?php echo $this->escape(substr($pub['resume'], 0, 250)); ?>
-        <?php if (strlen($pub['resume']) > 250): ?>...<?php endif; ?>
-    </p>
-    <?php endif; ?>
-
-    <div class="flex flex-wrap items-center gap-4 text-sm mb-4 pb-4 border-b">
-        <?php if (!empty($pub['doi'])): ?>
-        <div class="flex items-center gap-2 text-gray-600">
-            <span class="font-semibold">DOI:</span>
-            <a href="https://doi.org/<?php echo $this->escape($pub['doi']); ?>" target="_blank"
-                class="text-blue-600 hover:underline">
-                <?php echo $this->escape($pub['doi']); ?>
-            </a>
-        </div>
-        <?php endif; ?>
-
-        <?php if (!empty($pub['date_publication'])): ?>
-        <div class="flex items-center gap-2 text-gray-500">
-            <?php echo HtmlHelper::icon('calendar', 'w-4 h-4'); ?>
-            <span><?php echo DateHelper::format($pub['date_publication']); ?></span>
-        </div>
-        <?php endif; ?>
-    </div>
-
-    <?php if (!empty($pub['lien_telechargement']) || !empty($pub['fichier_pdf'])): ?>
-    <div>
-        <?php if (!empty($pub['lien_telechargement'])): ?>
-        <a href="<?php echo $pub['lien_telechargement']; ?>" target="_blank"
-            class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-            <?php echo HtmlHelper::icon('download', 'w-4 h-4'); ?>
-            <span>Télécharger</span>
-        </a>
-        <?php endif; ?>
     </div>
     <?php endif; ?>
 </div>
@@ -232,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         sortFunction: function(items, sortValue) {
             items.sort(function(a, b) {
-                var titleA, titleB, yearA, yearB;
+                let titleA, titleB, yearA, yearB;
 
                 if (sortValue === 'titre_asc') {
                     titleA = a.getAttribute('data-title').toLowerCase();
@@ -261,9 +192,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Filtre multiple par auteurs
-    var authorSelect = document.getElementById('filter-author');
+    let authorSelect = document.getElementById('filter-author');
     authorSelect.addEventListener('change', function() {
-        var selectedAuthors = Array.from(this.selectedOptions).map(function(opt) {
+        let selectedAuthors = Array.from(this.selectedOptions).map(function(opt) {
             return opt.value.toLowerCase();
         });
 
@@ -272,16 +203,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        var allCards = document.querySelectorAll('.item-card');
+        let allCards = document.querySelectorAll('.item-card');
         allCards.forEach(function(card) {
-            var cardAuthors = card.getAttribute('data-authors').toLowerCase();
-            var hasAuthor = selectedAuthors.some(function(author) {
+            let cardAuthors = card.getAttribute('data-authors').toLowerCase();
+            let hasAuthor = selectedAuthors.some(function(author) {
                 return cardAuthors.includes(author);
             });
             card.style.display = hasAuthor ? '' : 'none';
         });
 
-        var visibleCards = Array.from(allCards).filter(function(c) {
+        let visibleCards = Array.from(allCards).filter(function(c) {
             return c.style.display !== 'none';
         });
         document.getElementById('result-count').textContent = visibleCards.length;
@@ -293,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Initialiser le compteur
     document.getElementById('result-count').textContent = document.querySelectorAll('.item-card').length;
 });
 </script>
