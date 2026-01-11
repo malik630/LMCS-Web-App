@@ -77,6 +77,9 @@ class Form
             case 'number':
                 $this->renderNumberInput($field);
                 break;
+            case 'radio':
+                $this->renderRadioGroup($field);
+                break;
             default:
                 $this->renderTextInput($field);
         }
@@ -299,6 +302,26 @@ class Form
         
         $this->renderHelper($field);
     }
+
+    private function renderRadioGroup(array $field)
+    {
+        $this->renderLabel($field);
+
+        foreach ($field['options'] as $value => $label) {
+            $checked = ($field['value'] ?? '') === $value ? 'checked' : '';
+
+            echo '<label class="inline-flex items-center mr-4">';
+            echo '<input type="radio" name="' . htmlspecialchars($field['name']) . '" ';
+            echo 'value="' . htmlspecialchars($value) . '" ' . $checked . ' ';
+            if (!empty($field['required'])) echo 'required ';
+            echo 'class="text-green-600">';
+            echo '<span class="ml-2">' . htmlspecialchars($label) . '</span>';
+            echo '</label>';
+        }
+
+        $this->renderHelper($field);
+    }
+
     
     private function renderHelper(array $field)
     {

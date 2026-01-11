@@ -64,22 +64,47 @@ class AdminPublicationController extends Controller
             return;
         }
 
-        if (empty($_POST['titre']) || empty($_POST['annee'])) {
-            $_SESSION['error'] = 'Le titre et l\'année sont obligatoires';
+        $titre = trim($_POST['titre'] ?? '');
+        $annee = (int)($_POST['annee'] ?? date('Y'));
+        $typeId = (int)($_POST['type_publication_id'] ?? 0);
+        
+        if (empty($titre) || $annee < 1900 || $annee > date('Y') + 5 || $typeId <= 0) {
+            $_SESSION['error'] = 'Veuillez remplir tous les champs obligatoires correctement.';
             $this->redirect('adminPublication/create');
             return;
         }
 
+        if (empty($_POST['auteurs']) || !is_array($_POST['auteurs'])) {
+            $_SESSION['error'] = 'Veuillez sélectionner au moins un auteur.';
+            $this->redirect('adminPublication/create');
+            return;
+        }
+
+        $fichierPdf = null;
+        $lienTelechargement = null;
+        if (isset($_FILES['fichier_pdf']) && $_FILES['fichier_pdf']['error'] === UPLOAD_ERR_OK) {
+            $uploadResult = $this->uploadPDF($_FILES['fichier_pdf']);
+            if ($uploadResult['success']) {
+                $fichierPdf = $uploadResult['filename'];
+                $lienTelechargement = ASSETS_URL . 'documents/' . $fichierPdf;
+            } else {
+                $_SESSION['error'] = $uploadResult['message'];
+                $this->redirect('adminPublication/create');
+                return;
+            }
+        }
+        
         $publicationData = [
-            'titre' => $_POST['titre'],
-            'type_publication_id' => $_POST['type_publication_id'] ?? null,
+            'titre' => $titre,
+            'type_publication_id' => $typeId,
             'resume' => $_POST['resume'] ?? null,
-            'annee' => $_POST['annee'],
+            'annee' => $annee,
             'doi' => $_POST['doi'] ?? null,
-            'lien_telechargement' => $_POST['fichier_pdf'] ?? null,
-            'projet_id' => $_POST['projet_id'] ?? null,
+            'lien_telechargement' => $lienTelechargement,
+            'fichier_pdf' => $fichierPdf,
+            'projet_id' => !empty($_POST['projet_id']) ? (int)$_POST['projet_id'] : null,
             'domaine' => $_POST['domaine'] ?? null,
-            'statut' => $_POST['statut'] ?? 'publie',
+            'statut' => 'publie',
             'date_publication' => $_POST['date_publication'] ?? date('Y-m-d'),
             'date_soumission' => date('Y-m-d H:i:s')
         ];
@@ -87,12 +112,13 @@ class AdminPublicationController extends Controller
         $publicationId = $this->publicationModel->insert('publications', $publicationData);
         
         if ($publicationId) {
-            if (!empty($_POST['auteurs'])) {
-                $auteurs = is_array($_POST['auteurs']) ? $_POST['auteurs'] : [$_POST['auteurs']];
-                foreach ($auteurs as $index => $auteurId) {
+            $auteurs = $_POST['auteurs'];
+            foreach ($auteurs as $index => $auteurId) {
+                $auteurId = (int)$auteurId;
+                if ($auteurId > 0) {
                     $this->publicationModel->insert('publication_auteurs', [
                         'publication_id' => $publicationId,
-                        'usr_id' => $auteurId,
+                        'usr_id' => $auteurId, 
                         'ordre_auteur' => $index + 1
                     ]);
                 }
@@ -137,30 +163,67 @@ class AdminPublicationController extends Controller
             return;
         }
         
+        $publication = $this->publicationModel->getByIdAdmin($id);
+        
+        if (!$publication) {
+            $_SESSION['error'] = 'Publication introuvable.';
+            $this->redirect('adminPublication/publications');
+            return;
+        }
+
+        if (empty($_POST['auteurs']) || !is_array($_POST['auteurs'])) {
+            $_SESSION['error'] = 'Veuillez sélectionner au moins un auteur.';
+            $this->redirect('adminPublication/edit/' . $id);
+            return;
+        }
+
+        $fichierPdf = $publication['fichier_pdf'];
+        $lienTelechargement = $publication['lien_telechargement'];
+        
+        if (isset($_FILES['fichier_pdf']) && $_FILES['fichier_pdf']['error'] === UPLOAD_ERR_OK) {
+            $uploadResult = $this->uploadPDF($_FILES['fichier_pdf']);
+            if ($uploadResult['success']) {
+                if (!empty($publication['fichier_pdf'])) {
+                    $oldFile = __DIR__ . '/../../public/assets/documents/' . $publication['fichier_pdf'];
+                    if (file_exists($oldFile)) {
+                        unlink($oldFile);
+                    }
+                }
+                $fichierPdf = $uploadResult['filename'];
+                $lienTelechargement = ASSETS_URL . 'documents/' . $fichierPdf;
+            } else {
+                $_SESSION['error'] = $uploadResult['message'];
+                $this->redirect('adminPublication/edit/' . $id);
+                return;
+            }
+        }
+        
         $publicationData = [
             'titre' => $_POST['titre'],
             'type_publication_id' => $_POST['type_publication_id'] ?? null,
             'resume' => $_POST['resume'] ?? null,
             'annee' => $_POST['annee'],
             'doi' => $_POST['doi'] ?? null,
-            'lien_telechargement' => $_POST['lien_telechargement'] ?? null,
-            'projet_id' => $_POST['projet_id'] ?? null,
+            'lien_telechargement' => $lienTelechargement,
+            'fichier_pdf' => $fichierPdf,
+            'projet_id' => !empty($_POST['projet_id']) ? (int)$_POST['projet_id'] : null,
             'domaine' => $_POST['domaine'] ?? null,
-            'statut' => $_POST['statut'] ?? 'publie',
+            'statut' => $_POST['statut'] ?? $publication['statut'],
             'date_publication' => $_POST['date_publication'] ?? date('Y-m-d')
         ];
         
         $result = $this->publicationModel->updateById('publications', $id, $publicationData, 'id_publication');
         
         if ($result) {
-            $this->publicationModel->update('publication_auteurs', ['is_deleted' => 1], ['publication_id' => $id]);
+            $this->publicationModel->delete('publication_auteurs', ['publication_id' => $id]);
             
-            if (!empty($_POST['auteurs'])) {
-                $auteurs = is_array($_POST['auteurs']) ? $_POST['auteurs'] : [$_POST['auteurs']];
-                foreach ($auteurs as $index => $auteurId) {
+            $auteurs = $_POST['auteurs'];
+            foreach ($auteurs as $index => $auteurId) {
+                $auteurId = (int)$auteurId;
+                if ($auteurId > 0) {
                     $this->publicationModel->insert('publication_auteurs', [
                         'publication_id' => $id,
-                        'usr_id' => $auteurId,
+                        'usr_id' => $auteurId, 
                         'ordre_auteur' => $index + 1
                     ]);
                 }
@@ -171,7 +234,7 @@ class AdminPublicationController extends Controller
             $_SESSION['error'] = 'Erreur lors de la modification';
         }
         
-        $this->redirect('admin/publications');
+        $this->redirect('adminPublication/publications');
     }
     
     public function publish($id)
@@ -185,7 +248,7 @@ class AdminPublicationController extends Controller
             ? 'Publication publiée avec succès' 
             : 'Erreur lors de la publication';
         
-        $this->redirect('admin/publications');
+        $this->redirect('adminPublication/publications');
     }
     
     public function reject($id)
@@ -198,18 +261,27 @@ class AdminPublicationController extends Controller
             ? 'Publication rejetée' 
             : 'Erreur lors du rejet';
         
-        $this->redirect('admin/publications');
+        $this->redirect('adminPublication/publications');
     }
     
     public function delete($id)
     {
+        $publication = $this->publicationModel->getByIdAdmin($id);
+        
+        if ($publication && !empty($publication['fichier_pdf'])) {
+            $fichierPath = __DIR__ . '/../../public/assets/documents/' . $publication['fichier_pdf'];
+            if (file_exists($fichierPath)) {
+                unlink($fichierPath);
+            }
+        }
+        
         $result = $this->publicationModel->softDelete('publications', $id, 'id_publication');
         
         $_SESSION[$result ? 'success' : 'error'] = $result 
             ? 'Publication supprimée' 
             : 'Erreur lors de la suppression';
         
-        $this->redirect('admin/publications');
+        $this->redirect('adminPublication/publications');
     }
     
     public function rapports()
@@ -287,6 +359,33 @@ class AdminPublicationController extends Controller
         
         fclose($output);
         exit;
+    }
+    
+    private function uploadPDF($file)
+    {
+        $allowedTypes = ['application/pdf'];
+        
+        if (!in_array($file['type'], $allowedTypes)) {
+            return ['success' => false, 'message' => 'Seuls les fichiers PDF sont autorisés.'];
+        }
+        
+        if ($file['size'] > 10 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'Le fichier est trop volumineux (max 10 MB).'];
+        }
+        
+        $uploadDir = __DIR__ . '/../../public/assets/documents/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        $filename = uniqid() . '_' . time() . '.pdf';
+        $destination = $uploadDir . $filename;
+        
+        if (move_uploaded_file($file['tmp_name'], $destination)) {
+            return ['success' => true, 'filename' => $filename];
+        }
+        
+        return ['success' => false, 'message' => 'Erreur lors de l\'upload.'];
     }
 }
 ?>

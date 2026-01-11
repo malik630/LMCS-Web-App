@@ -102,6 +102,17 @@ class Router
         'admin/annulerReservation' => ['AdminReservationController', 'annuler'],
         'admin/detailsReservation' => ['AdminReservationController', 'details'],
 
+        'admin/evenements' => ['AdminEventController', 'index'],
+        'admin/createEvent' => ['AdminEventController', 'create'],
+        'admin/storeEvent' => ['AdminEventController', 'store'],
+        'admin/editEvent' => ['AdminEventController', 'edit'],
+        'admin/updateEvent' => ['AdminEventController', 'update'],
+        'admin/deleteEvent' => ['AdminEventController', 'delete'],
+        'admin/manageInscriptions' => ['AdminEventController', 'manageInscriptions'],
+        'admin/confirmerInscription' => ['AdminEventController', 'confirmerInscription'],
+        'admin/rejeterInscription' => ['AdminEventController', 'rejeterInscription'],
+        'admin/annulerInscription' => ['AdminEventController', 'annulerInscription'],
+
         'admin/parametres' => ['AdminSettingsController', 'index'],
         'admin/updateGeneral' => ['AdminSettingsController', 'updateGeneral'],
         'admin/updateTheme' => ['AdminSettingsController', 'updateTheme'],
