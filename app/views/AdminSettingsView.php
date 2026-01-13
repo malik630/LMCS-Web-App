@@ -37,7 +37,7 @@ class AdminSettingsView extends View
         <nav class="-mb-px flex space-x-8">
             <?php $first = true; foreach ($tabs as $id => $tab): ?>
             <button
-                class="settings-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors <?php echo $first ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'; ?>"
+                class="settings-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors <?php echo $first ? 'border-blue-600 text-blue-600' : 'border-transparent text-white hover:text-gray-700 hover:border-gray-300'; ?>"
                 data-tab="<?php echo $id; ?>">
                 <?php echo HtmlHelper::icon($tab['icon'], 'w-5 h-5'); ?>
                 <?php echo $tab['label']; ?>
@@ -71,9 +71,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             tabs.forEach(t => {
                 t.classList.remove('border-blue-600', 'text-blue-600');
-                t.classList.add('border-transparent', 'text-gray-500');
+                t.classList.add('border-transparent', 'text-white');
             });
-            this.classList.remove('border-transparent', 'text-gray-500');
+            this.classList.remove('border-transparent', 'text-white');
             this.classList.add('border-blue-600', 'text-blue-600');
 
             contents.forEach(content => {
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <h3 class="text-xl font-bold text-gray-900 mb-4">Restaurer la Base de Données</h3>
             <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
                 <p class="text-red-700 font-medium">
-                    ⚠️ Attention : Cette opération écrasera toutes les données actuelles !
+                    Attention : Cette opération écrasera toutes les données actuelles !
                 </p>
             </div>
             <form method="POST" action="<?php echo BASE_URL; ?>admin/restoreDatabase" enctype="multipart/form-data">

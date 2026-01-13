@@ -41,8 +41,7 @@ class DashboardTeamController extends Controller
             $this->redirect('dashboardteam/index');
             return;
         }
-        
-        // Vérifier si membre
+
         if (!$teamModel->isMember($teamId, $userId) && $team['chef_id'] != $userId) {
             $_SESSION['error'] = 'Accès refusé.';
             $this->redirect('dashboardteam/index');

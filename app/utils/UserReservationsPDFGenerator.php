@@ -67,8 +67,7 @@ class UserReservationsPDFGenerator
             
             $equipement = $res['equipement'];
             $parEquipement[$equipement] = ($parEquipement[$equipement] ?? 0) + 1;
-            
-            // Calculer durée approximative (simplifiée)
+
             if (!empty($res['date_debut']) && !empty($res['date_fin'])) {
                 $debut = strtotime($res['date_debut']);
                 $fin = strtotime($res['date_fin']);

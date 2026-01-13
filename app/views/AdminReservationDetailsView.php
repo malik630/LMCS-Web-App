@@ -85,7 +85,6 @@ class AdminReservationDetailsView extends View
         </div>
         <?php endif; ?>
 
-        <!-- Actions -->
         <div class="flex gap-4 pt-6 border-t">
             <?php if ($reservation['statut'] == 'en_attente'): ?>
             <a href="<?php echo BASE_URL . 'admin/confirmerReservation/' . $reservation['id_reservation']; ?>"

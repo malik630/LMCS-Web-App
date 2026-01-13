@@ -155,8 +155,6 @@ class AdminCreateEventView extends View
                 'message' => 'Les événements internes nécessitent que les participants soient connectés pour s\'inscrire. Les événements externes sont ouverts à tous.'
             ]
         ]);
-        
-        // Ajout du checkbox pour "externe" après le formulaire
         $this->renderExterneCheckbox();
         
         PageHeader::close();
@@ -168,7 +166,6 @@ class AdminCreateEventView extends View
         ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Remplacer le champ texte "externe" par un checkbox
     const externeField = document.querySelector('input[name="externe"]');
     if (externeField) {
         const container = externeField.closest('.mb-6');

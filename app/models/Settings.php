@@ -57,8 +57,7 @@ class Settings extends Model
             
             $filename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
             $filepath = $backupDir . $filename;
-            
-            // Récupérer toutes les tables
+
             $this->db->connect();
             $tables = $this->db->query("SHOW TABLES");
             
@@ -67,13 +66,10 @@ class Settings extends Model
             
             foreach ($tables as $table) {
                 $tableName = reset($table);
-                
-                // Structure de la table
                 $createTable = $this->db->query("SHOW CREATE TABLE `$tableName`");
                 $sql .= "DROP TABLE IF EXISTS `$tableName`;\n";
                 $sql .= $createTable[0]['Create Table'] . ";\n\n";
-                
-                // Données de la table
+ 
                 $rows = $this->db->query("SELECT * FROM `$tableName`");
                 
                 if (!empty($rows)) {
@@ -97,17 +93,14 @@ class Settings extends Model
             
             $this->db->disconnect();
             
-            // Écrire le fichier
             if (file_put_contents($filepath, $sql) === false) {
                 return ['success' => false, 'error' => 'Impossible d\'écrire le fichier de sauvegarde'];
             }
-            
-            // Enregistrer dans la base
+
             $userId = $_SESSION['user_id'] ?? null;
             $this->insert('backups', [
                 'filename' => $filename,
-                'filesize' => filesize($filepath),
-                'created_by' => $userId
+                'filesize' => filesize($filepath)
             ]);
             
             return ['success' => true, 'filename' => $filename];

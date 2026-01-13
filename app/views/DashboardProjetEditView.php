@@ -18,7 +18,7 @@ class DashboardProjetDetailView extends View
         $publications = $this->get('publications');
         $partenaires = $this->get('partenaires');
         $isResponsable = $this->get('is_responsable');
-        $availableMembers = $this->get('available_members', []); // Données du contrôleur
+        $availableMembers = $this->get('available_members', []);
         
         // Page header
         $badges = [

@@ -246,7 +246,6 @@ class DashboardStatsController extends Controller
         $user = $userModel->getById($userId);
         $projets = $userModel->getUserProjects($userId);
         
-        // Enrichir les projets
         foreach ($projets as &$projet) {
             $projet['membres'] = $projetModel->getMembers($projet['id_projet']);
             $projet['publications'] = $projetModel->getPublications($projet['id_projet']);
@@ -270,8 +269,7 @@ class DashboardStatsController extends Controller
         
         $user = $userModel->getById($userId);
         $reservations = $userModel->getUserReservations($userId, 1000);
-        
-        // Préparer les données pour le PDF
+
         $data = [];
         foreach ($reservations as $res) {
             $data[] = [

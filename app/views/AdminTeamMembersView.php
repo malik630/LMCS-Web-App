@@ -109,7 +109,6 @@ class AdminTeamMembersView extends View
     </form>
 
     <?php if (!$isChef): ?>
-    <!-- Bouton retirer -->
     <a href="<?php echo BASE_URL . 'admin/removeMember/' . $team['id_team'] . '/' . $member['id_user']; ?>"
         onclick="return confirm('Retirer ce membre de l\'équipe ?')"
         class="block w-full text-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition text-sm">

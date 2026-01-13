@@ -1,5 +1,4 @@
 <?php
-// app/utils/ProjetsPDFGenerator.php
 
 require_once __DIR__ . '/../../vendor/tcpdf/tcpdf.php';
 
